@@ -2,91 +2,113 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Catch The Button!</title>
+<title>Catch The Button</title>
+
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    background: #f0f0f0;
-    margin: 0;
-    overflow: hidden;
-  }
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#f2f2f2;
+  overflow:hidden;
+}
 
-  #topBar {
-    position: fixed;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: white;
-    padding: 10px 20px;
-    border-radius: 10px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-  }
+#topBar{
+  position:fixed;
+  top:10px;
+  left:50%;
+  transform:translateX(-50%);
+  background:white;
+  padding:10px 20px;
+  border-radius:10px;
+  box-shadow:0 3px 10px rgba(0,0,0,0.2);
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
 
-  #score {
-    font-size: 20px;
-    margin-right: 10px;
-  }
+#score{
+  font-size:20px;
+  font-weight:bold;
+}
 
-  #resetBtn {
-    padding: 5px 10px;
-    cursor: pointer;
-  }
+#reset{
+  padding:6px 12px;
+  cursor:pointer;
+}
 
-  #gameBtn {
-    position: absolute;
-    padding: 15px 25px;
-    font-size: 18px;
-    cursor: pointer;
-    border-radius: 8px;
-    border: none;
-    background: #ff4d4d;
-    color: white;
-  }
+#gameBtn{
+  position:absolute;
+  padding:16px 26px;
+  font-size:18px;
+  border:none;
+  border-radius:8px;
+  background:#ff4d4d;
+  color:white;
+  cursor:pointer;
+}
 </style>
 </head>
+
 <body>
 
 <div id="topBar">
-  <span id="score">Score: 0</span>
-  <button id="resetBtn">Reset</button>
+  <div id="score">Score: 0</div>
+  <button id="reset">Reset</button>
 </div>
 
 <button id="gameBtn">Click Me</button>
 
 <script>
-let score = 0;
-const button = document.getElementById("gameBtn");
-const scoreText = document.getElementById("score");
-const resetBtn = document.getElementById("resetBtn");
 
-function moveButton() {
-  const padding = 80;
+const btn = document.getElementById("gameBtn")
+const scoreText = document.getElementById("score")
+const resetBtn = document.getElementById("reset")
 
-  const maxX = window.innerWidth - button.offsetWidth - padding;
-  const maxY = window.innerHeight - button.offsetHeight - padding;
+let score = 0
 
-  const x = Math.random() * maxX + padding/2;
-  const y = Math.random() * maxY + padding/2;
+let x = window.innerWidth/2
+let y = window.innerHeight/2
 
-  button.style.left = x + "px";
-  button.style.top = y + "px";
+let targetX = Math.random()*window.innerWidth
+let targetY = Math.random()*window.innerHeight
+
+function newTarget(){
+  targetX = Math.random()*(window.innerWidth-100)
+  targetY = Math.random()*(window.innerHeight-100)
 }
 
-button.addEventListener("mouseenter", moveButton);
+function animate(){
 
-button.addEventListener("click", () => {
-  score++;
-  scoreText.textContent = "Score: " + score;
-  moveButton();
-});
+  let dx = targetX - x
+  let dy = targetY - y
+  let dist = Math.sqrt(dx*dx + dy*dy)
+
+  if(dist < 5){
+    newTarget()
+  }
+
+  x += dx * 0.02
+  y += dy * 0.02
+
+  btn.style.left = x + "px"
+  btn.style.top = y + "px"
+
+  requestAnimationFrame(animate)
+}
+
+btn.addEventListener("click", () => {
+  score++
+  scoreText.textContent = "Score: " + score
+  newTarget()
+})
 
 resetBtn.addEventListener("click", () => {
-  score = 0;
-  scoreText.textContent = "Score: 0";
-});
+  score = 0
+  scoreText.textContent = "Score: 0"
+})
 
-moveButton();
+animate()
+
 </script>
 
 </body>
