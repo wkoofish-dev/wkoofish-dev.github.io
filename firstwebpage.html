@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Birchwood Journal — Maps Worth Keeping</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     GLOBAL TOKENS — change colors/fonts/sizes for the whole page here
+     ============================================================ */
+  :root{
+    --bg:#F2F1ED;
+    --panel:#E9E7E0;
+    --ink:#1A1815;
+    --muted:#726E64;
+    --wood:#C9A876;
+    --slate:#4A5A63;
+    --line:#D6D3C9;
+
+    /* carousel card size — bump this up/down to change how many cards show at once */
+    --carousel-card-width: 440px;
+    --carousel-gap: 36px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    font-weight:400;
+    line-height:1.65;
+  }
+  h1,h2,h3{font-family:'Bricolage Grotesque', sans-serif; font-weight:500; line-height:1.08; letter-spacing:-0.02em;}
+  a{color:inherit; text-decoration:none;}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 44px;}
+  img,svg{display:block; max-width:100%;}
+
+  /* ============================================================
+     NAV
+     ============================================================ */
+  nav{padding:30px 0; border-bottom:1px solid var(--line);}
+  nav .wrap{display:flex; justify-content:space-between; align-items:center;}
+  .logo{font-family:'Bricolage Grotesque'; font-size:1.2rem; font-weight:600; display:flex; align-items:center; gap:10px;}
+  .navlinks{display:flex; gap:32px; font-size:0.92rem; color:var(--muted);}
+  .navlinks a:hover{color:var(--ink);}
+  .navcta{border-bottom:1px solid var(--ink); padding-bottom:2px; font-weight:500; font-size:0.92rem;}
+  @media (max-width:820px){.navlinks{display:none;}}
+
+  /* shared small "eyebrow" label style — still used in a couple of places */
+  .cat-no{color:var(--muted); font-size:0.85rem; margin-bottom:26px; display:flex; align-items:center; gap:10px;}
+  .cat-no .dot{width:6px; height:6px; border-radius:50%; background:var(--slate); display:inline-block;}
+
+  /* ============================================================
+     SECTION 1 — HERO (text left, large picture right)
+     ============================================================ */
+  .hero{padding:70px 0 110px;}
+  .hero-grid{display:grid; grid-template-columns:1.1fr 0.9fr; gap:60px; align-items:start;}
+  @media (max-width:900px){.hero-grid{grid-template-columns:1fr;}}
+  h1.hero-title{font-size:clamp(2.6rem,5.4vw,4.4rem); max-width:11ch; margin-bottom:32px;}
+  .hero-sub{color:var(--muted); max-width:40ch; font-size:1.05rem; margin-bottom:40px;}
+  .btnrow{display:flex; gap:18px; align-items:center; flex-wrap:wrap;}
+  .btn-primary{background:var(--ink); color:var(--bg); padding:16px 30px; font-size:0.95rem; display:inline-block; border:1px solid var(--ink); cursor:pointer;}
+  .btn-primary:hover{background:var(--slate); border-color:var(--slate);}
+  .btn-ghost{border-bottom:1px solid var(--ink); padding-bottom:2px; font-size:0.95rem;}
+
+  .hero-figure{position:relative;}
+  .hero-figure .frame{aspect-ratio:4/5; background:var(--panel); position:relative; overflow:hidden;}
+  .hero-figure svg{width:100%; height:100%;}
+  .hero-figure .cap{display:flex; justify-content:space-between; margin-top:14px; font-size:0.82rem; color:var(--muted);}
+
+  /* ============================================================
+     STRIP — thin trust-signal bar between sections
+     ============================================================ */
+  .strip{border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:24px 0;}
+  .strip .wrap{display:flex; justify-content:space-between; flex-wrap:wrap; gap:14px 30px; color:var(--muted); font-size:0.9rem;}
+  .strip b{color:var(--ink);}
+
+  .section{padding:110px 0;}
+  .section-head{max-width:640px; margin:0 auto 60px; text-align:center;}
+  .section-head h2{font-size:clamp(1.9rem,3.2vw,2.6rem); margin-bottom:16px;}
+  .section-head p{color:var(--muted); font-size:1.02rem;}
+
+  /* ============================================================
+     SECTION 2 — POSTCARD CAROUSEL (auto-scrolls right to left)
+     Sized so roughly 3 cards are visible at once — see
+     --carousel-card-width / --carousel-gap in the tokens above.
+     ============================================================ */
+  .carousel-viewport{
+    overflow:hidden;
+    -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
+            mask-image:linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
+  }
+  .carousel-track{
+    display:flex;
+    gap:var(--carousel-gap);
+    width:max-content;
+    animation:scroll-left 40s linear infinite;
+  }
+  .carousel-viewport:hover .carousel-track{ animation-play-state:paused; }
+  @keyframes scroll-left{
+    from{ transform:translateX(0); }
+    to{ transform:translateX(-50%); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .carousel-track{ animation:none; }
+  }
+  .postcard{
+    flex:0 0 var(--carousel-card-width);
+    background:#fff; border:1px solid var(--line); padding:26px 26px 32px;
+  }
+  .postcard-img{aspect-ratio:5/4; background:var(--panel); margin-bottom:22px; position:relative; overflow:hidden; border:1px solid var(--line);}
+  .postcard-img svg{width:100%; height:100%;}
+  .postcard h3{font-size:1.5rem; margin-bottom:8px; font-weight:500;}
+  .postcard .place{color:var(--slate); font-size:0.94rem; margin-bottom:12px; display:block;}
+  .postcard p{color:var(--muted); font-size:1rem; margin-bottom:18px;}
+  .postcard-foot{display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--line); padding-top:16px; font-size:0.95rem;}
+  .postcard-foot b{font-family:'Bricolage Grotesque'; font-weight:600; font-size:1.15rem;}
+
+  /* ============================================================
+     SECTION 3 — PRODUCT GRID (3 across x 3 down)
+     Swap/add .grid-item blocks to change what shows here.
+     ============================================================ */
+  .product-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:36px;
+  }
+  @media (max-width:900px){ .product-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:600px){ .product-grid{ grid-template-columns:1fr; } }
+  .grid-item{background:#fff; border:1px solid var(--line);}
+  .grid-item-img{aspect-ratio:1/1; background:var(--panel); overflow:hidden;}
+  .grid-item-img svg{width:100%; height:100%;}
+  .grid-item-body{padding:22px;}
+  .grid-item-body h3{font-size:1.15rem; margin-bottom:6px; font-weight:500;}
+  .grid-item-body p{color:var(--muted); font-size:0.9rem; margin-bottom:14px;}
+  .grid-item-foot{display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--line); padding-top:12px; font-size:0.9rem;}
+  .grid-item-foot b{font-family:'Bricolage Grotesque'; font-weight:600;}
+
+  /* ============================================================
+     SECTION 4 — ABOUT ME (was the testimonial / field-notes block)
+     ============================================================ */
+  .about{background:var(--panel); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
+  .about-grid{display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center;}
+  @media (max-width:820px){.about-grid{grid-template-columns:1fr;}}
+  .about-text .cat-no{margin-bottom:18px;}
+  .about-text p.quote{font-family:'Bricolage Grotesque'; font-weight:400; font-size:1.15rem; max-width:26ch; color:var(--ink);}
+  .about-diagram{border:1px solid var(--line); background:#fff; padding:30px;}
+
+  /* ============================================================
+     SECTION 5 — GET IN TOUCH (was the "where should we start" CTA)
+     ============================================================ */
+  .contact{padding:110px 0; text-align:center;}
+  .contact-box{
+    max-width:640px; margin:0 auto; background:var(--panel); border:1px solid var(--line);
+    padding:60px 50px;
+  }
+  .contact-box h2{font-size:clamp(2rem,4vw,2.6rem); margin-bottom:16px;}
+  .contact-box > p{color:var(--muted); margin-bottom:36px; max-width:38ch; margin-left:auto; margin-right:auto;}
+  .contact-form{display:flex; flex-direction:column; gap:20px; text-align:left;}
+  .field{display:flex; flex-direction:column; gap:8px;}
+  .field label{font-size:0.88rem; color:var(--slate); font-weight:500;}
+  .field input,
+  .field textarea{
+    background:#fff; border:1px solid var(--line); padding:13px 16px;
+    font-family:'Inter'; font-size:0.95rem; color:var(--ink); resize:vertical;
+  }
+  .field input:focus,
+  .field textarea:focus{outline:2px solid var(--slate); outline-offset:1px;}
+  .contact-form .btn-primary{margin-top:6px; width:100%; text-align:center;}
+
+  /* ============================================================
+     FOOTER
+     ============================================================ */
+  footer{padding:44px 0; border-top:1px solid var(--line);}
+  .foot-grid{display:flex; justify-content:space-between; flex-wrap:wrap; gap:20px; color:var(--muted); font-size:0.9rem;}
+  .foot-grid a:hover{color:var(--ink);}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     NAV
+     ============================================================ -->
+<nav>
+  <div class="wrap">
+    <div class="logo">
+      <svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="#4A5A63" stroke-width="1.2"/><path d="M6 13 L11 8 L15 14 L19 9" stroke="#1A1815" stroke-width="1.1" fill="none"/></svg>
+      Birchwood Journal
+    </div>
+    <div class="navlinks">
+      <a href="#work">Postcards</a>
+      <a href="#shop">Shop</a>
+      <a href="#about">About</a>
+    </div>
+    <a href="#contact" class="navcta">Write your map</a>
+  </div>
+</nav>
+
+<!-- ============================================================
+     SECTION 1 — HERO
+     Text on the left, one large picture on the right.
+     ============================================================ -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <h1 class="hero-title">A map is just a love letter to a place.</h1>
+      <p class="hero-sub">We turn the streets, coastlines, and mountains you've actually stood on into a laser-cut birch keepsake — the kind you tuck into a shelf, not a drawer.</p>
+      <div class="btnrow">
+        <a href="#contact" class="btn-primary">Start with your place</a>
+        <a href="#work" class="btn-ghost">Browse postcards</a>
+      </div>
+    </div>
+    <div class="hero-figure">
+      <div class="frame">
+        <svg viewBox="0 0 420 520">
+          <rect width="420" height="520" fill="#E9E7E0"/>
+          <g stroke="#1A1815" stroke-width="1" fill="none">
+            <path d="M50 430 C110 380 130 340 100 300 C70 260 140 240 170 210 C200 180 180 140 230 100"/>
+          </g>
+          <g stroke="#4A5A63" stroke-width="0.5" opacity="0.6">
+            <line x1="30" y1="70" x2="390" y2="70"/>
+            <line x1="30" y1="130" x2="390" y2="130"/>
+          </g>
+          <circle cx="230" cy="100" r="5" fill="#1A1815"/>
+          <text x="242" y="96" font-family="Inter" font-size="12" fill="#4A5A63">you are here</text>
+        </svg>
+      </div>
+      <div class="cap"><span>Cat. No. 014</span><span>Birch, 12"×16"</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     STRIP — trust signals
+     ============================================================ -->
+<div class="strip">
+  <div class="wrap">
+    <div><b>Every panel</b> hand-sanded and oiled in our Vermont studio</div>
+    <div><b>Free proof</b> sent before your wood is ever cut</div>
+    <div><b>Plastic-free</b> packaging, always</div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SECTION 2 — POSTCARD CAROUSEL
+     Auto-scrolls right to left, sized so ~3 cards show at once.
+     The <div id="track"> list is duplicated once at the bottom
+     (marked aria-hidden) so the loop wraps seamlessly.
+     ============================================================ -->
+<section class="section" id="work">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Six postcards, one story each</h2>
+      <p>Pick the place that means something, and tell us why — we engrave a short note on the back of every piece.</p>
+    </div>
+  </div>
+  <div class="carousel-viewport">
+    <div class="carousel-track" id="track">
+      <div class="postcard">
+        <div class="postcard-img"><svg viewBox="0 0 200 160"><rect width="200" height="160" fill="#E9E7E0"/><rect x="50" y="50" width="24" height="24" fill="none" stroke="#1A1815"/><rect x="90" y="70" width="40" height="20" fill="none" stroke="#1A1815"/><line x1="20" y1="120" x2="180" y2="120" stroke="#4A5A63"/><line x1="70" y1="20" x2="70" y2="140" stroke="#1A1815" stroke-width="0.6"/></svg></div>
+        <span class="place">Brooklyn, NY</span>
+        <h3>The Hometown Map</h3>
+        <p>Your street grid, cut into 12"×16" birch, ready to hang the day it arrives.</p>
+        <div class="postcard-foot"><span>Birch · Walnut</span><b>$132</b></div>
+      </div>
+      <div class="postcard">
+        <div class="postcard-img"><svg viewBox="0 0 200 160"><rect width="200" height="160" fill="#E9E7E0"/><path d="M10 100 Q60 70 100 100 T190 90" stroke="#1A1815" fill="none"/><path d="M10 120 Q60 90 100 120 T190 110" stroke="#4A5A63" fill="none"/></svg></div>
+        <span class="place">Big Sur, CA</span>
+        <h3>The Coastline</h3>
+        <p>The exact curve of shoreline where you took your first trip together.</p>
+        <div class="postcard-foot"><span>Birch · Cherry</span><b>$148</b></div>
+      </div>
+      <div class="postcard">
+        <div class="postcard-img"><svg viewBox="0 0 200 160"><rect width="200" height="160" fill="#E9E7E0"/><path d="M20 130 L60 60 L90 100 L120 40 L150 90 L180 130 Z" fill="none" stroke="#1A1815"/></svg></div>
+        <span class="place">Asheville, NC</span>
+        <h3>The Trailhead</h3>
+        <p>Elevation lines from the exact ridge you hiked, engraved edge to edge.</p>
+        <div class="postcard-foot"><span>Cherry · Oak</span><b>$156</b></div>
+      </div>
+      <div class="postcard">
+        <div class="postcard-img"><svg viewBox="0 0 200 160"><rect width="200" height="160" fill="#E9E7E0"/><circle cx="100" cy="80" r="5" fill="#1A1815"/><line x1="100" y1="80" x2="100" y2="30" stroke="#4A5A63" stroke-width="0.6"/><line x1="100" y1="80" x2="160" y2="80" stroke="#4A5A63" stroke-width="0.6"/></svg></div>
+        <span class="place">Any coordinate</span>
+        <h3>The First Address</h3>
+        <p>A single set of coordinates — where you met, married, or moved.</p>
+        <div class="postcard-foot"><span>Oak · Walnut</span><b>$96</b></div>
+      </div>
+      <div class="postcard">
+        <div class="postcard-img"><svg viewBox="0 0 200 160"><rect width="200" height="160" fill="#E9E7E0"/><circle cx="60" cy="60" r="16" fill="none" stroke="#1A1815"/><circle cx="110" cy="90" r="10" fill="none" stroke="#4A5A63"/></svg></div>
+        <span class="place">Any archipelago</span>
+        <h3>The Island Group</h3>
+        <p>A cluster of islands or a bay, spaced exactly as surveyed.</p>
+        <div class="postcard-foot"><span>Birch · Oak</span><b>$168</b></div>
+      </div>
+      <div class="postcard">
+        <div class="postcard-img"><svg viewBox="0 0 200 160"><rect width="200" height="160" fill="#E9E7E0"/><rect x="40" y="40" width="120" height="80" fill="none" stroke="#1A1815"/><line x1="40" y1="70" x2="160" y2="70" stroke="#4A5A63" stroke-width="0.6"/></svg></div>
+        <span class="place">Your full plot</span>
+        <h3>The Homestead</h3>
+        <p>A property line or floor plan, engraved for a housewarming gift.</p>
+        <div class="postcard-foot"><span>Walnut · Cherry</span><b>$176</b></div>
+      </div>
+      <!-- duplicate set below — keeps the scroll looping seamlessly, not visible to screen readers -->
+      <div class="postcard" aria-hidden="true">
+        <div class="postcard-img"><svg viewBox="0 0 200 160"><rect width="200" height="160" fill="#E9E7E0"/><rect x="50" y="50" width="24" height="24" fill="none" stroke="#1A1815"/><rect x="90" y="70" width="40" height="20" fill="none" stroke="#1A1815"/><line x1="20" y1="120" x2="180" y2="120" stroke="#4A5A63"/><line x1="70" y1="20" x2="70" y2="140" stroke="#1A1815" stroke-width="0.6"/></svg></div>
+        <span class="place">Brooklyn, NY</span>
+        <h3>The Hometown Map</h3>
+        <p>Your street grid, cut into 12"×16" birch, ready to hang the day it arrives.</p>
+        <div class="postcard-foot"><span>Birch · Walnut</span><b>$132</b></div>
+      </div>
+      <div class="postcard" aria-hidden="true">
+        <div class="postcard-img"><svg viewBox="0 0 200 160"><rect width="200" height="160" fill="#E9E7E0"/><path d="M10 100 Q60 70 100 100 T190 90" stroke="#1A1815" fill="none"/><path d="M10 120 Q60 90 100 120 T190 110" stroke="#4A5A63" fill="none"/></svg></div>
+        <span class="place">Big Sur, CA</span>
+        <h3>The Coastline</h3>
+        <p>The exact curve of shoreline where you took your first trip together.</p>
+        <div class="postcard-foot"><span>Birch · Cherry</span><b>$148</b></div>
+      </div>
+      <div class="postcard" aria-hidden="true">
+        <div class="postcard-img"><svg viewBox="0 0 200 160"><rect width="200" height="160" fill="#E9E7E0"/><path d="M20 130 L60 60 L90 100 L120 40 L150 90 L180 130 Z" fill="none" stroke="#1A1815"/></svg></div>
+        <span class="place">Asheville, NC</span>
+        <h3>The Trailhead</h3>
+        <p>Elevation lines from the exact ridge you hiked, engraved edge to edge.</p>
+        <div class="postcard-foot"><span>Cherry · Oak</span><b>$156</b></div>
+      </div>
+      <div class="postcard" aria-hidden="true">
+        <div class="postcard-img"><svg viewBox="0 0 200 160"><rect width="200" height="160" fill="#E9E7E0"/><circle cx="100" cy="80" r="5" fill="#1A1815"/><line x1="100" y1="80" x2="100" y2="30" stroke="#4A5A63" stroke-width="0.6"/><line x1="100" y1="80" x2="160" y2="80" stroke="#4A5A63" stroke-width="0.6"/></svg></div>
+        <span class="place">Any coordinate</span>
+        <h3>The First Address</h3>
+        <p>A single set of coordinates — where you met, married, or moved.</p>
+        <div class="postcard-foot"><span>Oak · Walnut</span><b>$96</b></div>
+      </div>
+      <div class="postcard" aria-hidden="true">
+        <div class="postcard-img"><svg viewBox="0 0 200 160"><rect width="200" height="160" fill="#E9E7E0"/><circle cx="60" cy="60" r="16" fill="none" stroke="#1A1815"/><circle cx="110" cy="90" r="10" fill="none" stroke="#4A5A63"/></svg></div>
+        <span class="place">Any archipelago</span>
+        <h3>The Island Group</h3>
+        <p>A cluster of islands or a bay, spaced exactly as surveyed.</p>
+        <div class="postcard-foot"><span>Birch · Oak</span><b>$168</b></div>
+      </div>
+      <div class="postcard" aria-hidden="true">
+        <div class="postcard-img"><svg viewBox="0 0 200 160"><rect width="200" height="160" fill="#E9E7E0"/><rect x="40" y="40" width="120" height="80" fill="none" stroke="#1A1815"/><line x1="40" y1="70" x2="160" y2="70" stroke="#4A5A63" stroke-width="0.6"/></svg></div>
+        <span class="place">Your full plot</span>
+        <h3>The Homestead</h3>
+        <p>A property line or floor plan, engraved for a housewarming gift.</p>
+        <div class="postcard-foot"><span>Walnut · Cherry</span><b>$176</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 3 — PRODUCT GRID (3 across x 3 down)
+     Swap out any .grid-item to change what's shown — each one is
+     self-contained (image, title, blurb, price).
+     ============================================================ -->
+<section class="section" id="shop" style="background:var(--panel); border-top:1px solid var(--line); border-bottom:1px solid var(--line);">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>More from the shop</h2>
+      <p>Beyond maps — small wood-cut pieces that make good gifts on their own.</p>
+    </div>
+    <div class="product-grid">
+      <div class="grid-item">
+        <div class="grid-item-img"><svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#E9E7E0"/><circle cx="100" cy="100" r="60" fill="none" stroke="#1A1815"/></svg></div>
+        <div class="grid-item-body"><h3>Coaster Set</h3><p>Four round coasters, each a different local landmark.</p><div class="grid-item-foot"><span>Birch</span><b>$38</b></div></div>
+      </div>
+      <div class="grid-item">
+        <div class="grid-item-img"><svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#E9E7E0"/><rect x="60" y="60" width="80" height="80" fill="none" stroke="#1A1815"/></svg></div>
+        <div class="grid-item-body"><h3>Wall Ornament</h3><p>A small hanging piece with a single street or trail line.</p><div class="grid-item-foot"><span>Cherry</span><b>$24</b></div></div>
+      </div>
+      <div class="grid-item">
+        <div class="grid-item-img"><svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#E9E7E0"/><path d="M60 140 L100 60 L140 140 Z" fill="none" stroke="#1A1815"/></svg></div>
+        <div class="grid-item-body"><h3>Trail Marker</h3><p>A single mountain peak silhouette on a display stand.</p><div class="grid-item-foot"><span>Oak</span><b>$42</b></div></div>
+      </div>
+      <div class="grid-item">
+        <div class="grid-item-img"><svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#E9E7E0"/><rect x="50" y="80" width="100" height="14" fill="none" stroke="#1A1815"/><rect x="50" y="106" width="100" height="14" fill="none" stroke="#1A1815"/></svg></div>
+        <div class="grid-item-body"><h3>Bookmark Pair</h3><p>Two slim bookmarks engraved with coordinates of your choice.</p><div class="grid-item-foot"><span>Walnut</span><b>$18</b></div></div>
+      </div>
+      <div class="grid-item">
+        <div class="grid-item-img"><svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#E9E7E0"/><circle cx="100" cy="100" r="4" fill="#1A1815"/><line x1="100" y1="100" x2="100" y2="50" stroke="#4A5A63" stroke-width="0.6"/><line x1="100" y1="100" x2="150" y2="100" stroke="#4A5A63" stroke-width="0.6"/></svg></div>
+        <div class="grid-item-body"><h3>Keychain Coordinate</h3><p>A pocket-size tag with the coordinates that matter to you.</p><div class="grid-item-foot"><span>Birch</span><b>$16</b></div></div>
+      </div>
+      <div class="grid-item">
+        <div class="grid-item-img"><svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#E9E7E0"/><path d="M50 120 Q100 90 150 120" fill="none" stroke="#1A1815"/></svg></div>
+        <div class="grid-item-body"><h3>Note Card Set</h3><p>Ten flat wood-veneer cards, laser-cut with a coastline outline.</p><div class="grid-item-foot"><span>Birch</span><b>$28</b></div></div>
+      </div>
+      <div class="grid-item">
+        <div class="grid-item-img"><svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#E9E7E0"/><rect x="70" y="50" width="60" height="100" fill="none" stroke="#1A1815"/></svg></div>
+        <div class="grid-item-body"><h3>Phone Stand</h3><p>A small tabletop stand with your city skyline along the base.</p><div class="grid-item-foot"><span>Walnut</span><b>$32</b></div></div>
+      </div>
+      <div class="grid-item">
+        <div class="grid-item-img"><svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#E9E7E0"/><circle cx="70" cy="90" r="14" fill="none" stroke="#1A1815"/><circle cx="120" cy="110" r="10" fill="none" stroke="#4A5A63"/></svg></div>
+        <div class="grid-item-body"><h3>Ornament Duo</h3><p>Two small ornaments — one for you, one to give away.</p><div class="grid-item-foot"><span>Cherry</span><b>$26</b></div></div>
+      </div>
+      <div class="grid-item">
+        <div class="grid-item-img"><svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#E9E7E0"/><line x1="40" y1="160" x2="160" y2="40" stroke="#1A1815"/></svg></div>
+        <div class="grid-item-body"><h3>Ruler & Scale</h3><p>A working wooden ruler etched with your favorite trail's mile markers.</p><div class="grid-item-foot"><span>Oak</span><b>$22</b></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 4 — ABOUT ME (was the testimonial / field-notes block)
+     Header text + quote (same quote as before, just smaller and
+     without the attribution line) alongside an image.
+     ============================================================ -->
+<section class="about section" id="about">
+  <div class="wrap about-grid">
+    <div class="about-text">
+      <div class="cat-no"><span class="dot"></span>About me</div>
+      <p class="quote">"I didn't know I wanted a map of my grandmother's block until I saw it on the wall."</p>
+    </div>
+    <div class="about-diagram">
+      <svg viewBox="0 0 380 300">
+        <rect width="380" height="300" fill="#fff"/>
+        <g stroke="#1A1815" stroke-width="1" fill="none">
+          <line x1="40" y1="40" x2="340" y2="40"/>
+          <line x1="40" y1="90" x2="220" y2="90"/>
+          <line x1="40" y1="140" x2="300" y2="140"/>
+          <rect x="180" y="180" width="120" height="70"/>
+        </g>
+        <circle cx="240" cy="215" r="4" fill="#4A5A63"/>
+        <text x="250" y="219" font-family="Inter" font-size="12" fill="#4A5A63">grandma's house</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 5 — GET IN TOUCH (was the "where should we start" CTA)
+     Static contact form — wire up the <form> action / a script
+     to actually send these fields somewhere.
+     ============================================================ -->
+<section class="contact" id="contact">
+  <div class="wrap">
+    <div class="contact-box">
+      <h2>Get in touch</h2>
+      <p>Tell us the place, and we'll send a free proof before anything touches the wood.</p>
+      <form class="contact-form">
+        <div class="field">
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" placeholder="Your name" required>
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" placeholder="you@example.com" required>
+        </div>
+        <div class="field">
+          <label for="message">Message</label>
+          <textarea id="message" name="message" rows="4" placeholder="Tell us about the place you'd like engraved"></textarea>
+        </div>
+        <button type="submit" class="btn-primary">Send message</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer>
+  <div class="wrap foot-grid">
+    <div>Birchwood Journal, Burlington VT</div>
+    <div style="display:flex; gap:24px;">
+      <a href="#">Care guide</a>
+      <a href="#">Shipping</a>
+      <a href="#">Instagram</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
