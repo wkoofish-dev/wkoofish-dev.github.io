@@ -543,6 +543,22 @@
     const now = performance.now();
     const dt = now - lastTime;
     if (dt > 0) {
-      velocity = ((e.clientX -
+      velocity = ((e.clientX - lastX) / dt) * 16; // convert px/ms to px/frame at ~60fps
+    }
+    lastX = e.clientX;
+    lastTime = now;
+  });
+
+  function endDrag(){
+    if (!isDragging) return;
+    isDragging = false;
+    viewport.classList.remove('dragging');
+    track.classList.remove('dragging');
+    // whatever `velocity` was at the moment of release now drives the momentum glide
+  }
+  viewport.addEventListener('pointerup', endDrag);
+  viewport.addEventListener('pointerleave', endDrag);
+})();
+</script>
 </body>
 </html>
