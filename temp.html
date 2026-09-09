@@ -89,23 +89,19 @@
      ============================================================ */
   .carousel-viewport{
     overflow:hidden;
+    cursor:grab;
     -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
             mask-image:linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
+    touch-action:pan-y; /* claims horizontal swipes for the carousel, leaves vertical page scroll alone */
   }
+  .carousel-viewport.dragging{ cursor:grabbing; }
   .carousel-track{
     display:flex;
     gap:var(--carousel-gap);
     width:max-content;
-    animation:scroll-left 40s linear infinite;
+    will-change:transform;
   }
-  .carousel-viewport:hover .carousel-track{ animation-play-state:paused; }
-  @keyframes scroll-left{
-    from{ transform:translateX(0); }
-    to{ transform:translateX(-50%); }
-  }
-  @media (prefers-reduced-motion: reduce){
-    .carousel-track{ animation:none; }
-  }
+  .carousel-track.dragging{ user-select:none; }
   .postcard{
     flex:0 0 var(--carousel-card-width);
     background:#fff; border:1px solid var(--line); padding:26px 26px 32px;
@@ -475,6 +471,65 @@
     </div>
   </div>
 </footer>
+<script>
+(function () {
+  const viewport = document.querySelector('.carousel-viewport');
+  const track = document.getElementById('track');
 
+  let offset = 0;            // current horizontal position (px)
+  let speed = 0.6;           // auto-scroll speed, px per frame — raise/lower to taste
+  let isDragging = false;
+  let startX = 0;
+  let startOffset = 0;
+  let isHovering = false;
+  let halfWidth = 0;         // width of one full set of cards (track holds two copies)
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion) speed = 0;
+
+  function measure(){ halfWidth = track.scrollWidth / 2; }
+  measure();
+  window.addEventListener('resize', measure);
+
+  function applyTransform(){
+    if (offset <= -halfWidth) offset += halfWidth; // loop seamlessly
+    if (offset > 0) offset -= halfWidth;
+    track.style.transform = `translateX(${offset}px)`;
+  }
+
+  function tick(){
+    if (!isDragging && !isHovering) {
+      offset -= speed;
+      applyTransform();
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  viewport.addEventListener('mouseenter', () => isHovering = true);
+  viewport.addEventListener('mouseleave', () => isHovering = false);
+
+  viewport.addEventListener('pointerdown', (e) => {
+    isDragging = true;
+    startX = e.clientX;
+    startOffset = offset;
+    viewport.classList.add('dragging');
+    track.classList.add('dragging');
+    viewport.setPointerCapture(e.pointerId);
+  });
+  viewport.addEventListener('pointermove', (e) => {
+    if (!isDragging) return;
+    offset = startOffset + (e.clientX - startX);
+    applyTransform();
+  });
+  function endDrag(){
+    isDragging = false;
+    viewport.classList.remove('dragging');
+    track.classList.remove('dragging');
+  }
+  viewport.addEventListener('pointerup', endDrag);
+  viewport.addEventListener('pointerleave', endDrag);
+})();
+</script>
 </body>
 </html>
