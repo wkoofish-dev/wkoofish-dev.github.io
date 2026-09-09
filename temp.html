@@ -434,22 +434,12 @@
 <section class="contact" id="contact">
   <div class="wrap">
     <div class="contact-box">
-      <h2>Get in touch</h2>
-      <p>Tell us the place, and we'll send a free proof before anything touches the wood.</p>
-      <form class="contact-form">
-        <div class="field">
-          <label for="name">Name</label>
-          <input type="text" id="name" name="name" placeholder="Your name" required>
-        </div>
-        <div class="field">
-          <label for="email">Email</label>
-          <input type="email" id="email" name="email" placeholder="you@example.com" required>
-        </div>
-        <div class="field">
-          <label for="message">Message</label>
-          <textarea id="message" name="message" rows="4" placeholder="Tell us about the place you'd like engraved"></textarea>
-        </div>
-        <button type="submit" class="btn-primary">Send message</button>
+      <form action="https://api.web3forms.com/submit" method="POST">
+        <input type="hidden" name="access_key" value="d782b4d0-2eaa-4b45-ab6b-d8a8bcaaa82d">
+        <input type="text" name="name" required>
+        <input type="email" name="email" required>
+        <textarea name="message" required></textarea>
+        <button type="submit">Submit Form</button>
       </form>
     </div>
   </div>
