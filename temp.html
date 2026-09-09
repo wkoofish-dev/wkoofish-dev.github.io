@@ -476,13 +476,20 @@
   const viewport = document.querySelector('.carousel-viewport');
   const track = document.getElementById('track');
 
-  let offset = 0;            // current horizontal position (px)
-  let speed = 0.6;           // auto-scroll speed, px per frame — raise/lower to taste
+  let offset = 0;
+  let speed = 0.6;           // auto-scroll speed, px per frame
   let isDragging = false;
+  let isHovering = false;
   let startX = 0;
   let startOffset = 0;
-  let isHovering = false;
-  let halfWidth = 0;         // width of one full set of cards (track holds two copies)
+  let halfWidth = 0;
+
+  // --- momentum tracking ---
+  let velocity = 0;                // current momentum, px per frame
+  let lastX = 0;
+  let lastTime = 0;
+  const friction = 0.95;           // how slowly momentum decays — closer to 1 = glides further
+  const velocityThreshold = 0.1;   // below this, momentum stops and auto-scroll takes back over
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (reduceMotion) speed = 0;
@@ -492,14 +499,20 @@
   window.addEventListener('resize', measure);
 
   function applyTransform(){
-    if (offset <= -halfWidth) offset += halfWidth; // loop seamlessly
+    if (offset <= -halfWidth) offset += halfWidth;
     if (offset > 0) offset -= halfWidth;
     track.style.transform = `translateX(${offset}px)`;
   }
 
   function tick(){
-    if (!isDragging && !isHovering) {
-      offset -= speed;
+    if (isDragging) {
+      // position already being set live in pointermove — nothing to do here
+    } else if (Math.abs(velocity) > velocityThreshold) {
+      offset += velocity;
+      velocity *= friction;   // momentum decays a little each frame
+      applyTransform();
+    } else if (!isHovering) {
+      offset -= speed;        // back to normal auto-scroll once momentum runs out
       applyTransform();
     }
     requestAnimationFrame(tick);
@@ -511,25 +524,25 @@
 
   viewport.addEventListener('pointerdown', (e) => {
     isDragging = true;
+    velocity = 0;              // cancel any momentum still playing out from a previous drag
     startX = e.clientX;
     startOffset = offset;
+    lastX = e.clientX;
+    lastTime = performance.now();
     viewport.classList.add('dragging');
     track.classList.add('dragging');
     viewport.setPointerCapture(e.pointerId);
   });
+
   viewport.addEventListener('pointermove', (e) => {
     if (!isDragging) return;
     offset = startOffset + (e.clientX - startX);
     applyTransform();
-  });
-  function endDrag(){
-    isDragging = false;
-    viewport.classList.remove('dragging');
-    track.classList.remove('dragging');
-  }
-  viewport.addEventListener('pointerup', endDrag);
-  viewport.addEventListener('pointerleave', endDrag);
-})();
-</script>
+
+    // measure how fast the pointer is moving right now, to use as release velocity
+    const now = performance.now();
+    const dt = now - lastTime;
+    if (dt > 0) {
+      velocity = ((e.clientX -
 </body>
 </html>
