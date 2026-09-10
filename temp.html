@@ -89,6 +89,11 @@
   :root[data-theme="dark"] .theme-toggle .icon-sun{display:none;}
   :root[data-theme="dark"] .theme-toggle .icon-moon{display:block;}
 
+  :root[data-theme="dark"] .logo img{
+  filter: invert(1);
+  transition: filter .25s ease;
+  }
+
   /* shared small "eyebrow" label style — still used in a couple of places */
   .cat-no{color:var(--muted); font-size:0.85rem; margin-bottom:26px; display:flex; align-items:center; gap:10px;}
   .cat-no .dot{width:6px; height:6px; border-radius:50%; background:var(--slate); display:inline-block;}
