@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SVG Area Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0E2036;
+    --bg-grid: rgba(255,255,255,0.045);
+    --panel: #142B47;
+    --panel-2: #0F2440;
+    --line: #2C4B70;
+    --line-soft: #1E3A5C;
+    --text: #EAF1FA;
+    --text-dim: #8AA3C0;
+    --amber: #F2A93C;
+    --amber-dim: #7A5A28;
+    --green: #6FBF8B;
+    --red: #E0674F;
+  }
+  *{ box-sizing: border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    background:
+      linear-gradient(var(--bg-grid) 1px, transparent 1px) 0 0/28px 28px,
+      linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px) 0 0/28px 28px,
+      var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    padding: 40px 20px 80px;
+    min-height: 100%;
+  }
+  .wrap{ max-width: 880px; margin: 0 auto; }
+
+  header{ margin-bottom: 28px; }
+  .kicker{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--amber);
+    margin: 0 0 10px;
+  }
+  h1{
+    font-size: clamp(28px, 4vw, 38px);
+    font-weight: 700;
+    margin: 0 0 10px;
+    line-height: 1.15;
+  }
+  header p{
+    color: var(--text-dim);
+    font-size: 15px;
+    line-height: 1.6;
+    max-width: 62ch;
+    margin: 0;
+  }
+
+  .panel{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 22px;
+    margin-bottom: 18px;
+  }
+  .panel-label{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin: 0 0 14px;
+  }
+
+  /* Upload zone */
+  .dropzone{
+    border: 1.5px dashed var(--line);
+    border-radius: 4px;
+    padding: 34px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .dropzone:hover, .dropzone.drag{
+    border-color: var(--amber);
+    background: rgba(242,169,60,0.05);
+  }
+  .dropzone svg{ width: 30px; height: 30px; stroke: var(--text-dim); margin-bottom: 10px; }
+  .dropzone .main{ font-size: 15px; margin-bottom: 4px; }
+  .dropzone .sub{ font-size: 13px; color: var(--text-dim); }
+  .dropzone .filename{ font-family:'JetBrains Mono', monospace; color: var(--amber); }
+  input[type=file]{ display:none; }
+
+  /* Preview */
+  .previews{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 18px;
+  }
+  @media (max-width: 620px){ .previews{ grid-template-columns: 1fr; } }
+  .preview-box{
+    background: var(--panel-2);
+    border: 1px solid var(--line-soft);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .preview-box .cap{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .preview-box canvas{
+    display:block;
+    width: 100%;
+    height: auto;
+    background:
+      linear-gradient(45deg, #0a1a2c 25%, transparent 25%) 0 0/16px 16px,
+      linear-gradient(-45deg, #0a1a2c 25%, transparent 25%) 0 0/16px 16px,
+      linear-gradient(45deg, transparent 75%, #0a1a2c 75%) 0 0/16px 16px,
+      linear-gradient(-45deg, transparent 75%, #0a1a2c 75%) 0 0/16px 16px,
+      var(--panel-2);
+  }
+
+  /* Options row */
+  .options{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-top: 16px;
+    align-items:center;
+  }
+  .toggle{
+    display:flex; align-items:center; gap: 9px;
+    font-size: 13.5px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .toggle input{ width: 15px; height: 15px; accent-color: var(--amber); }
+  .field-inline{ display:flex; align-items:center; gap:8px; font-size: 13.5px; color: var(--text-dim); }
+  select{
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+  .helptext{
+    font-size: 12.5px;
+    color: var(--text-dim);
+    margin-top: 10px;
+    line-height: 1.55;
+  }
+
+  /* Dimensions */
+  .dim-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 14px;
+    align-items:end;
+  }
+  @media (max-width: 500px){ .dim-grid{ grid-template-columns: 1fr 1fr; } .dim-grid > div:nth-child(3){ grid-column: 1/-1; } }
+  label{
+    display:block;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 7px;
+  }
+  input[type=number]{
+    width:100%;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-family:'JetBrains Mono', monospace;
+    font-size: 16px;
+    padding: 10px 12px;
+    border-radius: 3px;
+  }
+  input[type=number]:focus, select:focus{ outline: 1px solid var(--amber); border-color: var(--amber); }
+
+  /* Result */
+  .result{
+    background: var(--panel);
+    border: 1px solid var(--amber-dim);
+    border-radius: 4px;
+    padding: 26px;
+    text-align:center;
+  }
+  .result .readout-label{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+  }
+  .result .readout{
+    font-family:'JetBrains Mono', monospace;
+    font-size: clamp(34px, 7vw, 52px);
+    font-weight: 500;
+    color: var(--amber);
+    line-height:1;
+    margin-bottom: 18px;
+  }
+  .result .readout .unit{ font-size: 0.5em; color: var(--text-dim); margin-left: 6px; }
+  .subreadouts{
+    display:flex;
+    justify-content:center;
+    gap: 34px;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--line-soft);
+    padding-top: 16px;
+  }
+  .subreadouts div{ text-align:center; }
+  .subreadouts .v{ font-family:'JetBrains Mono', monospace; font-size: 17px; }
+  .subreadouts .l{ font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+
+  .empty-note{
+    text-align:center;
+    color: var(--text-dim);
+    font-size: 13.5px;
+    padding: 20px 10px;
+  }
+  .error{
+    background: rgba(224,103,79,0.1);
+    border: 1px solid var(--red);
+    color: #F3A493;
+    padding: 12px 14px;
+    border-radius: 4px;
+    font-size: 13.5px;
+    margin-top: 14px;
+  }
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="kicker">// SVG AREA CALCULATOR</p>
+    <h1>Measure the real-world area inside a shape</h1>
+    <p>Upload an SVG, tell it what physical width and height that artwork maps to, and it renders the shape at high resolution to measure exactly how much surface is enclosed — useful for pricing engraving, material, or coverage on irregular cuts.</p>
+  </header>
+
+  <div class="panel">
+    <p class="panel-label">01 — SOURCE FILE</p>
+    <div class="dropzone" id="dropzone">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 21h14"/></svg>
+      <div class="main" id="dz-main">Drop an .svg file here, or click to browse</div>
+      <div class="sub" id="dz-sub">Vector shapes only — embedded external images may block the measurement</div>
+      <input type="file" id="fileInput" accept=".svg,image/svg+xml">
+    </div>
+    <div id="errorBox" class="error hidden"></div>
+
+    <div class="previews hidden" id="previewsWrap">
+      <div class="preview-box">
+        <div class="cap">ORIGINAL</div>
+        <canvas id="canvasOriginal"></canvas>
+      </div>
+      <div class="preview-box">
+        <div class="cap">WHAT'S BEING MEASURED</div>
+        <canvas id="canvasMeasure"></canvas>
+      </div>
+    </div>
+
+    <div class="options hidden" id="optionsWrap">
+      <label class="toggle">
+        <input type="checkbox" id="forceFill" checked>
+        Treat as one solid enclosed shape
+      </label>
+      <div class="field-inline">
+        Fill rule
+        <select id="fillRule">
+          <option value="nonzero">nonzero (default)</option>
+          <option value="evenodd">evenodd (for shapes with holes)</option>
+        </select>
+      </div>
+    </div>
+    <p class="helptext" id="optionsHelp">
+      Leave this on if your SVG is just an outline (a cut/engrave line with no fill) — it fills the enclosed area so it can be measured. Turn it off if your SVG already has real, intentional filled colors and you only want to measure the painted pixels. If a shape has a hole cut out of it and it isn't showing up as a hole in the right preview, switch the fill rule to "evenodd".
+    </p>
+  </div>
+
+  <div class="panel">
+    <p class="panel-label">02 — PHYSICAL DIMENSIONS</p>
+    <div class="dim-grid">
+      <div>
+        <label for="physWidth">Width this SVG maps to</label>
+        <input type="number" id="physWidth" min="0" step="any" placeholder="e.g. 12">
+      </div>
+      <div>
+        <label for="physHeight">Height this SVG maps to</label>
+        <input type="number" id="physHeight" min="0" step="any" placeholder="e.g. 8">
+      </div>
+      <div>
+        <label for="unit">Unit</label>
+        <select id="unit">
+          <option value="in">inches</option>
+          <option value="cm">centimeters</option>
+          <option value="mm">millimeters</option>
+          <option value="ft">feet</option>
+          <option value="m">meters</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel result" id="resultPanel">
+    <div id="resultEmpty" class="empty-note">Upload an SVG and enter its physical width and height to see the enclosed area.</div>
+    <div id="resultBody" class="hidden">
+      <div class="readout-label">ENCLOSED AREA</div>
+      <div class="readout" id="areaReadout">0<span class="unit">in²</span></div>
+      <div class="subreadouts">
+        <div>
+          <div class="v" id="coverageReadout">0%</div>
+          <div class="l">of bounding box</div>
+        </div>
+        <div>
+          <div class="v" id="bboxReadout">0</div>
+          <div class="l">bounding box area</div>
+        </div>
+        <div>
+          <div class="v" id="resReadout">0×0</div>
+          <div class="l">measured at (px)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const dzMain = document.getElementById('dz-main');
+  const dzSub = document.getElementById('dz-sub');
+  const errorBox = document.getElementById('errorBox');
+  const previewsWrap = document.getElementById('previewsWrap');
+  const optionsWrap = document.getElementById('optionsWrap');
+  const optionsHelp = document.getElementById('optionsHelp');
+  const canvasOriginal = document.getElementById('canvasOriginal');
+  const canvasMeasure = document.getElementById('canvasMeasure');
+  const forceFillCb = document.getElementById('forceFill');
+  const fillRuleSel = document.getElementById('fillRule');
+  const physWidthInp = document.getElementById('physWidth');
+  const physHeightInp = document.getElementById('physHeight');
+  const unitSel = document.getElementById('unit');
+
+  const resultEmpty = document.getElementById('resultEmpty');
+  const resultBody = document.getElementById('resultBody');
+  const areaReadout = document.getElementById('areaReadout');
+  const coverageReadout = document.getElementById('coverageReadout');
+  const bboxReadout = document.getElementById('bboxReadout');
+  const resReadout = document.getElementById('resReadout');
+
+  const TARGET_LONG_SIDE = 1400; // raster resolution for measurement, in px
+  let coveredPixels = 0;         // alpha-weighted count of enclosed pixels
+  let canvasW = 0, canvasH = 0;  // resolution the measurement was done at
+  let rawSvgText = null;
+  let hasResult = false;
+
+  function showError(msg){
+    errorBox.textContent = msg;
+    errorBox.classList.remove('hidden');
+  }
+  function clearError(){
+    errorBox.classList.add('hidden');
+    errorBox.textContent = '';
+  }
+
+  // ---------- File loading ----------
+  dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropzone.classList.remove('drag');
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', e => {
+    if (e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
+  });
+
+  function handleFile(file){
+    clearError();
+    if (!file.name.toLowerCase().endsWith('.svg') && file.type !== 'image/svg+xml'){
+      showError('That doesn\'t look like an SVG file. Please upload a .svg file.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      rawSvgText = reader.result;
+      dzMain.innerHTML = 'Loaded: <span class="filename">' + file.name + '</span>';
+      dzSub.textContent = 'Click or drop another file to replace it';
+      render();
+    };
+    reader.onerror = () => showError('Could not read that file — try again.');
+    reader.readAsText(file);
+  }
+
+  // ---------- SVG parsing helpers ----------
+  function parseIntrinsicSize(svgEl){
+    // Prefer viewBox for aspect ratio; fall back to width/height attributes.
+    const vb = svgEl.getAttribute('viewBox');
+    if (vb){
+      const parts = vb.trim().split(/[\s,]+/).map(Number);
+      if (parts.length === 4 && parts[2] > 0 && parts[3] > 0){
+        return { w: parts[2], h: parts[3] };
+      }
+    }
+    const wAttr = parseFloat(svgEl.getAttribute('width'));
+    const hAttr = parseFloat(svgEl.getAttribute('height'));
+    if (wAttr > 0 && hAttr > 0) return { w: wAttr, h: hAttr };
+    return { w: 100, h: 100 }; // last-resort default
+  }
+
+  const SHAPE_TAGS = ['path','rect','circle','ellipse','polygon','polyline','line'];
+
+  function buildSvgBlobUrl(svgText, targetW, targetH, forceFill, fillRule){
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svgText, 'image/svg+xml');
+    const parserError = doc.querySelector('parsererror');
+    if (parserError) throw new Error('This SVG could not be parsed — it may be malformed.');
+
+    const svgEl = doc.documentElement;
+    // Lock the raster resolution by setting explicit pixel width/height,
+    // while leaving viewBox alone so content scales correctly into it.
+    svgEl.setAttribute('width', targetW);
+    svgEl.setAttribute('height', targetH);
+
+    if (forceFill){
+      SHAPE_TAGS.forEach(tag => {
+        doc.querySelectorAll(tag).forEach(el => {
+          el.style.setProperty('fill', '#000000', 'important');
+          el.style.setProperty('fill-opacity', '1', 'important');
+          el.style.setProperty('stroke', 'none', 'important');
+          el.style.setProperty('fill-rule', fillRule, 'important');
+        });
+      });
+    }
+
+    const serialized = new XMLSerializer().serializeToString(doc);
+    const blob = new Blob([serialized], { type: 'image/svg+xml;charset=utf-8' });
+    return URL.createObjectURL(blob);
+  }
+
+  function loadImage(url){
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('The browser could not rasterize this SVG.'));
+      img.src = url;
+    });
+  }
+
+  // ---------- Core render + measure ----------
+  async function render(){
+    if (!rawSvgText) return;
+    clearError();
+    previewsWrap.classList.remove('hidden');
+    optionsWrap.classList.remove('hidden');
+    optionsHelp.classList.remove('hidden');
+
+    try {
+      const parser = new DOMParser();
+      const probe = parser.parseFromString(rawSvgText, 'image/svg+xml');
+      if (probe.querySelector('parsererror')) throw new Error('This SVG could not be parsed — it may be malformed.');
+      const size = parseIntrinsicSize(probe.documentElement);
+
+      const scale = TARGET_LONG_SIDE / Math.max(size.w, size.h);
+      canvasW = Math.max(1, Math.round(size.w * scale));
+      canvasH = Math.max(1, Math.round(size.h * scale));
+
+      // --- Original preview (unmodified) ---
+      const origUrl = buildSvgBlobUrl(rawSvgText, canvasW, canvasH, false, 'nonzero');
+      const origImg = await loadImage(origUrl);
+      canvasOriginal.width = canvasW;
+      canvasOriginal.height = canvasH;
+      const octx = canvasOriginal.getContext('2d');
+      octx.clearRect(0, 0, canvasW, canvasH);
+      octx.drawImage(origImg, 0, 0, canvasW, canvasH);
+      URL.revokeObjectURL(origUrl);
+
+      // --- Measurement pass (optionally force-filled) ---
+      const forceFill = forceFillCb.checked;
+      const fillRule = fillRuleSel.value;
+      const measUrl = buildSvgBlobUrl(rawSvgText, canvasW, canvasH, forceFill, fillRule);
+      const measImg = await loadImage(measUrl);
+      canvasMeasure.width = canvasW;
+      canvasMeasure.height = canvasH;
+      const mctx = canvasMeasure.getContext('2d');
+      mctx.clearRect(0, 0, canvasW, canvasH);
+      mctx.drawImage(measImg, 0, 0, canvasW, canvasH);
+      URL.revokeObjectURL(measUrl);
+
+      let data;
+      try {
+        data = mctx.getImageData(0, 0, canvasW, canvasH).data;
+      } catch (secErr){
+        throw new Error('This SVG references external images, which browsers block from being measured for security reasons. Remove any linked/embedded raster images and try again.');
+      }
+
+      // Tint the measured canvas amber wherever it's filled, so people can see
+      // exactly what got counted, then sum alpha for sub-pixel accuracy.
+      let sum = 0;
+      for (let i = 0; i < data.length; i += 4){
+        const a = data[i + 3];
+        sum += a;
+        if (a > 0){
+          data[i] = 0xF2; data[i+1] = 0xA9; data[i+2] = 0x3C; data[i+3] = Math.max(a, 90);
+        }
+      }
+      coveredPixels = sum / 255;
+      mctx.putImageData(new ImageData(data, canvasW, canvasH), 0, 0);
+
+      hasResult = true;
+      updateResult();
+    } catch (err){
+      hasResult = false;
+      updateResult();
+      showError(err.message || 'Something went wrong reading that SVG.');
+    }
+  }
+
+  forceFillCb.addEventListener('change', render);
+  fillRuleSel.addEventListener('change', render);
+
+  // ---------- Result computation (no re-render needed) ----------
+  function updateResult(){
+    const w = parseFloat(physWidthInp.value);
+    const h = parseFloat(physHeightInp.value);
+    const unit = unitSel.value;
+
+    if (!hasResult || !(w > 0) || !(h > 0) || !canvasW || !canvasH){
+      resultEmpty.classList.remove('hidden');
+      resultBody.classList.add('hidden');
+      return;
+    }
+    resultEmpty.classList.add('hidden');
+    resultBody.classList.remove('hidden');
+
+    const pixelArea = (w / canvasW) * (h / canvasH);
+    const area = coveredPixels * pixelArea;
+    const bboxArea = w * h;
+    const coveragePct = (area / bboxArea) * 100;
+
+    areaReadout.innerHTML = formatNumber(area) + '<span class="unit">' + unit + '&sup2;</span>';
+    coverageReadout.textContent = coveragePct.toFixed(1) + '%';
+    bboxReadout.textContent = formatNumber(bboxArea) + ' ' + unit + '\u00B2';
+    resReadout.textContent = canvasW + '\u00D7' + canvasH;
+  }
+
+  function formatNumber(n){
+    if (n === 0) return '0';
+    if (n < 0.01) return n.toExponential(2);
+    if (n < 1) return n.toFixed(4);
+    if (n < 100) return n.toFixed(2);
+    return n.toLocaleString(undefined, { maximumFractionDigits: 1 });
+  }
+
+  [physWidthInp, physHeightInp, unitSel].forEach(el => el.addEventListener('input', updateResult));
+})();
+</script>
+</body>
+</html>
