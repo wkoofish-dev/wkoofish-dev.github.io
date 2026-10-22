@@ -154,7 +154,7 @@
     transition:background-color .25s ease, border-color .25s ease;
   }
   .postcard-img{aspect-ratio:5/4; background:var(--media-bg); margin-bottom:22px; position:relative; overflow:hidden; border:1px solid var(--line);}
-  .postcard-img svg{width:100%; height:100%;}
+  .postcard-img img{width:100%; height:100%; object-fit:cover;}
   .postcard h3{font-size:1.5rem; margin-bottom:8px; font-weight:500;}
   .postcard .place{color:var(--slate); font-size:0.94rem; margin-bottom:12px; display:block;}
   .postcard p{color:var(--muted); font-size:1rem; margin-bottom:18px;}
@@ -174,7 +174,7 @@
   @media (max-width:600px){ .product-grid{ grid-template-columns:1fr; } }
   .grid-item{background:var(--card-bg); border:1px solid var(--line); transition:background-color .25s ease, border-color .25s ease;}
   .grid-item-img{aspect-ratio:1/1; background:var(--media-bg); overflow:hidden;}
-  .grid-item-img svg{width:100%; height:100%;}
+  .grid-item-img img{width:100%; height:100%; object-fit:cover;}
   .grid-item-body{padding:22px;}
   .grid-item-body h3{font-size:1.15rem; margin-bottom:6px; font-weight:500;}
   .grid-item-body p{color:var(--muted); font-size:0.9rem; margin-bottom:14px;}
@@ -189,7 +189,8 @@
   @media (max-width:820px){.about-grid{grid-template-columns:1fr;}}
   .about-text .cat-no{margin-bottom:18px;}
   .about-text p.quote{font-family:'Bricolage Grotesque'; font-weight:400; font-size:1.15rem; max-width:26ch; color:var(--ink);}
-  .about-diagram{border:1px solid var(--line); background:var(--media-bg); padding:30px;}
+  .about-diagram{border:1px solid var(--line); background:var(--media-bg); overflow:hidden; aspect-ratio:380/300;}
+  .about-diagram img{width:100%; height:100%; object-fit:cover;}
 
   /* ============================================================
      SECTION 5 — GET IN TOUCH (was the "where should we start" CTA)
@@ -275,18 +276,7 @@
     </div>
     <div class="hero-figure">
       <div class="frame">
-        <svg viewBox="0 0 420 520">
-          <rect width="420" height="520" fill="#E9E7E0"/>
-          <g stroke="#1A1815" stroke-width="1" fill="none">
-            <path d="M50 430 C110 380 130 340 100 300 C70 260 140 240 170 210 C200 180 180 140 230 100"/>
-          </g>
-          <g stroke="#4A5A63" stroke-width="0.5" opacity="0.6">
-            <line x1="30" y1="70" x2="390" y2="70"/>
-            <line x1="30" y1="130" x2="390" y2="130"/>
-          </g>
-          <circle cx="230" cy="100" r="5" fill="#1A1815"/>
-          <text x="242" y="96" font-family="Inter" font-size="12" fill="#4A5A63">you are here</text>
-        </svg>
+        <img src="files/sampleimage.png" alt="Featured laser-engraved wood map">
       </div>
       <div class="cap"><span>Cat. No. 014</span><span>Birch, 12"×16"</span></div>
     </div>
@@ -309,6 +299,9 @@
      Auto-scrolls right to left, sized so ~3 cards show at once.
      The <div id="track"> list is duplicated once at the bottom
      (marked aria-hidden) so the loop wraps seamlessly.
+     Each .postcard-img now holds a placeholder <img> pointing at
+     files/sampleimage.png — swap the src on each one for the real
+     product photo whenever it's ready.
      ============================================================ -->
 <section class="section" id="work">
   <div class="wrap">
@@ -320,42 +313,42 @@
   <div class="carousel-viewport">
     <div class="carousel-track" id="track">
       <div class="postcard">
-        <div class="postcard-img"><svg viewBox="0 0 200 160"><rect width="200" height="160" fill="#E9E7E0"/><rect x="50" y="50" width="24" height="24" fill="none" stroke="#1A1815"/><rect x="90" y="70" width="40" height="20" fill="none" stroke="#1A1815"/><line x1="20" y1="120" x2="180" y2="120" stroke="#4A5A63"/><line x1="70" y1="20" x2="70" y2="140" stroke="#1A1815" stroke-width="0.6"/></svg></div>
+        <div class="postcard-img"><img src="files/sampleimage.png" alt="The Hometown Map"></div>
         <span class="place">Brooklyn, NY</span>
         <h3>The Hometown Map</h3>
         <p>Your street grid, cut into 12"×16" birch, ready to hang the day it arrives.</p>
         <div class="postcard-foot"><span>Birch · Walnut</span><b>$132</b></div>
       </div>
       <div class="postcard">
-        <div class="postcard-img"><svg viewBox="0 0 200 160"><rect width="200" height="160" fill="#E9E7E0"/><path d="M10 100 Q60 70 100 100 T190 90" stroke="#1A1815" fill="none"/><path d="M10 120 Q60 90 100 120 T190 110" stroke="#4A5A63" fill="none"/></svg></div>
+        <div class="postcard-img"><img src="files/sampleimage.png" alt="The Coastline"></div>
         <span class="place">Big Sur, CA</span>
         <h3>The Coastline</h3>
         <p>The exact curve of shoreline where you took your first trip together.</p>
         <div class="postcard-foot"><span>Birch · Cherry</span><b>$148</b></div>
       </div>
       <div class="postcard">
-        <div class="postcard-img"><svg viewBox="0 0 200 160"><rect width="200" height="160" fill="#E9E7E0"/><path d="M20 130 L60 60 L90 100 L120 40 L150 90 L180 130 Z" fill="none" stroke="#1A1815"/></svg></div>
+        <div class="postcard-img"><img src="files/sampleimage.png" alt="The Trailhead"></div>
         <span class="place">Asheville, NC</span>
         <h3>The Trailhead</h3>
         <p>Elevation lines from the exact ridge you hiked, engraved edge to edge.</p>
         <div class="postcard-foot"><span>Cherry · Oak</span><b>$156</b></div>
       </div>
       <div class="postcard">
-        <div class="postcard-img"><svg viewBox="0 0 200 160"><rect width="200" height="160" fill="#E9E7E0"/><circle cx="100" cy="80" r="5" fill="#1A1815"/><line x1="100" y1="80" x2="100" y2="30" stroke="#4A5A63" stroke-width="0.6"/><line x1="100" y1="80" x2="160" y2="80" stroke="#4A5A63" stroke-width="0.6"/></svg></div>
+        <div class="postcard-img"><img src="files/sampleimage.png" alt="The First Address"></div>
         <span class="place">Any coordinate</span>
         <h3>The First Address</h3>
         <p>A single set of coordinates — where you met, married, or moved.</p>
         <div class="postcard-foot"><span>Oak · Walnut</span><b>$96</b></div>
       </div>
       <div class="postcard">
-        <div class="postcard-img"><svg viewBox="0 0 200 160"><rect width="200" height="160" fill="#E9E7E0"/><circle cx="60" cy="60" r="16" fill="none" stroke="#1A1815"/><circle cx="110" cy="90" r="10" fill="none" stroke="#4A5A63"/></svg></div>
+        <div class="postcard-img"><img src="files/sampleimage.png" alt="The Island Group"></div>
         <span class="place">Any archipelago</span>
         <h3>The Island Group</h3>
         <p>A cluster of islands or a bay, spaced exactly as surveyed.</p>
         <div class="postcard-foot"><span>Birch · Oak</span><b>$168</b></div>
       </div>
       <div class="postcard">
-        <div class="postcard-img"><svg viewBox="0 0 200 160"><rect width="200" height="160" fill="#E9E7E0"/><rect x="40" y="40" width="120" height="80" fill="none" stroke="#1A1815"/><line x1="40" y1="70" x2="160" y2="70" stroke="#4A5A63" stroke-width="0.6"/></svg></div>
+        <div class="postcard-img"><img src="files/sampleimage.png" alt="The Homestead"></div>
         <span class="place">Your full plot</span>
         <h3>The Homestead</h3>
         <p>A property line or floor plan, engraved for a housewarming gift.</p>
@@ -363,42 +356,42 @@
       </div>
       <!-- duplicate set below — keeps the scroll looping seamlessly, not visible to screen readers -->
       <div class="postcard" aria-hidden="true">
-        <div class="postcard-img"><svg viewBox="0 0 200 160"><rect width="200" height="160" fill="#E9E7E0"/><rect x="50" y="50" width="24" height="24" fill="none" stroke="#1A1815"/><rect x="90" y="70" width="40" height="20" fill="none" stroke="#1A1815"/><line x1="20" y1="120" x2="180" y2="120" stroke="#4A5A63"/><line x1="70" y1="20" x2="70" y2="140" stroke="#1A1815" stroke-width="0.6"/></svg></div>
+        <div class="postcard-img"><img src="files/sampleimage.png" alt=""></div>
         <span class="place">Brooklyn, NY</span>
         <h3>The Hometown Map</h3>
         <p>Your street grid, cut into 12"×16" birch, ready to hang the day it arrives.</p>
         <div class="postcard-foot"><span>Birch · Walnut</span><b>$132</b></div>
       </div>
       <div class="postcard" aria-hidden="true">
-        <div class="postcard-img"><svg viewBox="0 0 200 160"><rect width="200" height="160" fill="#E9E7E0"/><path d="M10 100 Q60 70 100 100 T190 90" stroke="#1A1815" fill="none"/><path d="M10 120 Q60 90 100 120 T190 110" stroke="#4A5A63" fill="none"/></svg></div>
+        <div class="postcard-img"><img src="files/sampleimage.png" alt=""></div>
         <span class="place">Big Sur, CA</span>
         <h3>The Coastline</h3>
         <p>The exact curve of shoreline where you took your first trip together.</p>
         <div class="postcard-foot"><span>Birch · Cherry</span><b>$148</b></div>
       </div>
       <div class="postcard" aria-hidden="true">
-        <div class="postcard-img"><svg viewBox="0 0 200 160"><rect width="200" height="160" fill="#E9E7E0"/><path d="M20 130 L60 60 L90 100 L120 40 L150 90 L180 130 Z" fill="none" stroke="#1A1815"/></svg></div>
+        <div class="postcard-img"><img src="files/sampleimage.png" alt=""></div>
         <span class="place">Asheville, NC</span>
         <h3>The Trailhead</h3>
         <p>Elevation lines from the exact ridge you hiked, engraved edge to edge.</p>
         <div class="postcard-foot"><span>Cherry · Oak</span><b>$156</b></div>
       </div>
       <div class="postcard" aria-hidden="true">
-        <div class="postcard-img"><svg viewBox="0 0 200 160"><rect width="200" height="160" fill="#E9E7E0"/><circle cx="100" cy="80" r="5" fill="#1A1815"/><line x1="100" y1="80" x2="100" y2="30" stroke="#4A5A63" stroke-width="0.6"/><line x1="100" y1="80" x2="160" y2="80" stroke="#4A5A63" stroke-width="0.6"/></svg></div>
+        <div class="postcard-img"><img src="files/sampleimage.png" alt=""></div>
         <span class="place">Any coordinate</span>
         <h3>The First Address</h3>
         <p>A single set of coordinates — where you met, married, or moved.</p>
         <div class="postcard-foot"><span>Oak · Walnut</span><b>$96</b></div>
       </div>
       <div class="postcard" aria-hidden="true">
-        <div class="postcard-img"><svg viewBox="0 0 200 160"><rect width="200" height="160" fill="#E9E7E0"/><circle cx="60" cy="60" r="16" fill="none" stroke="#1A1815"/><circle cx="110" cy="90" r="10" fill="none" stroke="#4A5A63"/></svg></div>
+        <div class="postcard-img"><img src="files/sampleimage.png" alt=""></div>
         <span class="place">Any archipelago</span>
         <h3>The Island Group</h3>
         <p>A cluster of islands or a bay, spaced exactly as surveyed.</p>
         <div class="postcard-foot"><span>Birch · Oak</span><b>$168</b></div>
       </div>
       <div class="postcard" aria-hidden="true">
-        <div class="postcard-img"><svg viewBox="0 0 200 160"><rect width="200" height="160" fill="#E9E7E0"/><rect x="40" y="40" width="120" height="80" fill="none" stroke="#1A1815"/><line x1="40" y1="70" x2="160" y2="70" stroke="#4A5A63" stroke-width="0.6"/></svg></div>
+        <div class="postcard-img"><img src="files/sampleimage.png" alt=""></div>
         <span class="place">Your full plot</span>
         <h3>The Homestead</h3>
         <p>A property line or floor plan, engraved for a housewarming gift.</p>
@@ -411,7 +404,8 @@
 <!-- ============================================================
      SECTION 3 — PRODUCT GRID (3 across x 3 down)
      Swap out any .grid-item to change what's shown — each one is
-     self-contained (image, title, blurb, price).
+     self-contained (image, title, blurb, price). Each image is a
+     placeholder pointing at files/sampleimage.png for now.
      ============================================================ -->
 <section class="section" id="shop" style="background:var(--panel); border-top:1px solid var(--line); border-bottom:1px solid var(--line);">
   <div class="wrap">
@@ -421,39 +415,39 @@
     </div>
     <div class="product-grid">
       <div class="grid-item">
-        <div class="grid-item-img"><svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#E9E7E0"/><circle cx="100" cy="100" r="60" fill="none" stroke="#1A1815"/></svg></div>
+        <div class="grid-item-img"><img src="files/sampleimage.png" alt="Coaster Set"></div>
         <div class="grid-item-body"><h3>Coaster Set</h3><p>Four round coasters, each a different local landmark.</p><div class="grid-item-foot"><span>Birch</span><b>$38</b></div></div>
       </div>
       <div class="grid-item">
-        <div class="grid-item-img"><svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#E9E7E0"/><rect x="60" y="60" width="80" height="80" fill="none" stroke="#1A1815"/></svg></div>
+        <div class="grid-item-img"><img src="files/sampleimage.png" alt="Wall Ornament"></div>
         <div class="grid-item-body"><h3>Wall Ornament</h3><p>A small hanging piece with a single street or trail line.</p><div class="grid-item-foot"><span>Cherry</span><b>$24</b></div></div>
       </div>
       <div class="grid-item">
-        <div class="grid-item-img"><svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#E9E7E0"/><path d="M60 140 L100 60 L140 140 Z" fill="none" stroke="#1A1815"/></svg></div>
+        <div class="grid-item-img"><img src="files/sampleimage.png" alt="Trail Marker"></div>
         <div class="grid-item-body"><h3>Trail Marker</h3><p>A single mountain peak silhouette on a display stand.</p><div class="grid-item-foot"><span>Oak</span><b>$42</b></div></div>
       </div>
       <div class="grid-item">
-        <div class="grid-item-img"><svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#E9E7E0"/><rect x="50" y="80" width="100" height="14" fill="none" stroke="#1A1815"/><rect x="50" y="106" width="100" height="14" fill="none" stroke="#1A1815"/></svg></div>
+        <div class="grid-item-img"><img src="files/sampleimage.png" alt="Bookmark Pair"></div>
         <div class="grid-item-body"><h3>Bookmark Pair</h3><p>Two slim bookmarks engraved with coordinates of your choice.</p><div class="grid-item-foot"><span>Walnut</span><b>$18</b></div></div>
       </div>
       <div class="grid-item">
-        <div class="grid-item-img"><svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#E9E7E0"/><circle cx="100" cy="100" r="4" fill="#1A1815"/><line x1="100" y1="100" x2="100" y2="50" stroke="#4A5A63" stroke-width="0.6"/><line x1="100" y1="100" x2="150" y2="100" stroke="#4A5A63" stroke-width="0.6"/></svg></div>
+        <div class="grid-item-img"><img src="files/sampleimage.png" alt="Keychain Coordinate"></div>
         <div class="grid-item-body"><h3>Keychain Coordinate</h3><p>A pocket-size tag with the coordinates that matter to you.</p><div class="grid-item-foot"><span>Birch</span><b>$16</b></div></div>
       </div>
       <div class="grid-item">
-        <div class="grid-item-img"><svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#E9E7E0"/><path d="M50 120 Q100 90 150 120" fill="none" stroke="#1A1815"/></svg></div>
+        <div class="grid-item-img"><img src="files/sampleimage.png" alt="Note Card Set"></div>
         <div class="grid-item-body"><h3>Note Card Set</h3><p>Ten flat wood-veneer cards, laser-cut with a coastline outline.</p><div class="grid-item-foot"><span>Birch</span><b>$28</b></div></div>
       </div>
       <div class="grid-item">
-        <div class="grid-item-img"><svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#E9E7E0"/><rect x="70" y="50" width="60" height="100" fill="none" stroke="#1A1815"/></svg></div>
+        <div class="grid-item-img"><img src="files/sampleimage.png" alt="Phone Stand"></div>
         <div class="grid-item-body"><h3>Phone Stand</h3><p>A small tabletop stand with your city skyline along the base.</p><div class="grid-item-foot"><span>Walnut</span><b>$32</b></div></div>
       </div>
       <div class="grid-item">
-        <div class="grid-item-img"><svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#E9E7E0"/><circle cx="70" cy="90" r="14" fill="none" stroke="#1A1815"/><circle cx="120" cy="110" r="10" fill="none" stroke="#4A5A63"/></svg></div>
+        <div class="grid-item-img"><img src="files/sampleimage.png" alt="Ornament Duo"></div>
         <div class="grid-item-body"><h3>Ornament Duo</h3><p>Two small ornaments — one for you, one to give away.</p><div class="grid-item-foot"><span>Cherry</span><b>$26</b></div></div>
       </div>
       <div class="grid-item">
-        <div class="grid-item-img"><svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#E9E7E0"/><line x1="40" y1="160" x2="160" y2="40" stroke="#1A1815"/></svg></div>
+        <div class="grid-item-img"><img src="files/sampleimage.png" alt="Ruler & Scale"></div>
         <div class="grid-item-body"><h3>Ruler & Scale</h3><p>A working wooden ruler etched with your favorite trail's mile markers.</p><div class="grid-item-foot"><span>Oak</span><b>$22</b></div></div>
       </div>
     </div>
@@ -472,17 +466,7 @@
       <p class="quote">"Hey! I'm Wesley, Founder of Urbnn Maps Studio. I've always enjoyed creating, and tinkering. I've put that same spirit into my products, and hopefully it shows!"</p>
     </div>
     <div class="about-diagram">
-      <svg viewBox="0 0 380 300">
-        <rect width="380" height="300" fill="#fff"/>
-        <g stroke="#1A1815" stroke-width="1" fill="none">
-          <line x1="40" y1="40" x2="340" y2="40"/>
-          <line x1="40" y1="90" x2="220" y2="90"/>
-          <line x1="40" y1="140" x2="300" y2="140"/>
-          <rect x="180" y="180" width="120" height="70"/>
-        </g>
-        <circle cx="240" cy="215" r="4" fill="#4A5A63"/>
-        <text x="250" y="219" font-family="Inter" font-size="12" fill="#4A5A63">grandma's house</text>
-      </svg>
+      <img src="files/sampleimage.png" alt="Wesley, founder of Urbnn Maps Studio">
     </div>
   </div>
 </section>
