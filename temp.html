@@ -221,6 +221,54 @@
   footer{padding:44px 0; border-top:1px solid var(--line); transition:border-color .25s ease;}
   .foot-grid{display:flex; justify-content:space-between; flex-wrap:wrap; gap:20px; color:var(--muted); font-size:0.9rem;}
   .foot-grid a:hover{color:var(--ink);}
+
+  /* ============================================================
+     LIGHTBOX — fullscreen image viewer
+     Hidden by default; the "open" class reveals it. Any product,
+     postcard, hero, or about photo opens here when clicked.
+     Hovering the enlarged image zooms in on whatever point the
+     mouse is over, via the --zoom-x / --zoom-y / --zoom-scale
+     custom properties, set live from JS in the LIGHTBOX SCRIPT.
+     ============================================================ */
+  .lightbox{
+    position:fixed; inset:0; z-index:1000;
+    background:rgba(10,9,8,0.94);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    opacity:0; visibility:hidden; transition:opacity .2s ease;
+  }
+  .lightbox.open{ opacity:1; visibility:visible; }
+  .lightbox-close{
+    position:absolute; top:24px; right:28px; z-index:1001;
+    width:44px; height:44px; border-radius:50%;
+    border:1px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.06);
+    color:#F3F1EA; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:background-color .2s ease, border-color .2s ease;
+  }
+  .lightbox-close:hover{ background:rgba(255,255,255,0.16); border-color:rgba(255,255,255,0.5); }
+  .lightbox-close svg{ width:20px; height:20px; }
+  .lightbox-stage{
+    width:100%; max-width:1100px; flex:1; display:flex; align-items:center; justify-content:center;
+    padding:80px 40px 20px; overflow:hidden;
+  }
+  .lightbox-stage img{
+    max-width:100%; max-height:78vh; width:auto; height:auto;
+    object-fit:contain; cursor:zoom-in;
+    transform-origin: var(--zoom-x, 50%) var(--zoom-y, 50%);
+    transform:scale(var(--zoom-scale, 1));
+    transition:transform .08s linear;
+  }
+  .lightbox-info{
+    width:100%; max-width:1100px; padding:0 40px 36px;
+    display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px 20px;
+    color:#F3F1EA;
+  }
+  .lightbox-title{ font-family:'Bricolage Grotesque'; font-size:1.2rem; font-weight:500; }
+  .lightbox-meta{ color:#A79F8F; font-size:0.95rem; }
+
+  /* every image that opens the lightbox gets a pointer cursor as a hint */
+  .postcard-img img, .grid-item-img img, .hero-figure .frame img, .about-diagram img{
+    cursor:pointer;
+  }
 </style>
 </head>
 <body>
@@ -519,6 +567,28 @@
 </footer>
 
 <!-- ============================================================
+     LIGHTBOX — fullscreen image viewer
+     Click any product/postcard/hero/about photo to open it full
+     screen here. Hover over the enlarged image for a zoom effect
+     that follows the cursor. Close with the X, by clicking the
+     dark backdrop, or by pressing Escape.
+     ============================================================ -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightbox-close" type="button" aria-label="Close image viewer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+      <path d="M5 5l14 14M19 5L5 19"/>
+    </svg>
+  </button>
+  <div class="lightbox-stage" id="lightbox-stage">
+    <img src="" alt="" id="lightbox-img">
+  </div>
+  <div class="lightbox-info" id="lightbox-info">
+    <span class="lightbox-title" id="lightbox-title"></span>
+    <span class="lightbox-meta" id="lightbox-meta"></span>
+  </div>
+</div>
+
+<!-- ============================================================
      THEME SCRIPT — dark mode toggle
      Default is always light on a fresh visit. If a visitor has
      picked dark mode before, we remember it via localStorage and
@@ -561,8 +631,19 @@
   let isDragging = false;
   let isHovering = false;
   let startX = 0;
+  let startY = 0;
   let startOffset = 0;
   let halfWidth = 0;
+
+  // --- tap detection (so a click on a postcard still opens the lightbox) ---
+  // Pointer capture (used below for drag/swipe) can unreliably suppress the
+  // browser's native "click" event on the image underneath, which is why the
+  // lightbox used to open inconsistently on the carousel. Instead, we track
+  // the press ourselves and decide directly whether it was a tap or a drag.
+  let tapTarget = null;      // the <img> that was pressed, if any
+  let tapStartTime = 0;
+  const TAP_MAX_DISTANCE = 6;   // px of movement still counted as a tap, not a drag
+  const TAP_MAX_DURATION = 600; // ms — longer than this is treated as a drag, not a tap
 
   // --- momentum tracking ---
   let velocity = 0;                // current momentum, px per frame
@@ -606,9 +687,15 @@
     isDragging = true;
     velocity = 0;              // cancel any momentum still playing out from a previous drag
     startX = e.clientX;
+    startY = e.clientY;
     startOffset = offset;
     lastX = e.clientX;
     lastTime = performance.now();
+
+    // remember what was actually pressed, and when, for the tap check on release
+    tapTarget = e.target.closest('img');
+    tapStartTime = lastTime;
+
     viewport.classList.add('dragging');
     track.classList.add('dragging');
     viewport.setPointerCapture(e.pointerId);
@@ -629,15 +716,150 @@
     lastTime = now;
   });
 
-  function endDrag(){
+  function endDrag(e, checkForTap){
     if (!isDragging) return;
     isDragging = false;
     viewport.classList.remove('dragging');
     track.classList.remove('dragging');
     // whatever `velocity` was at the moment of release now drives the momentum glide
+
+    // a clean release (little movement, released quickly) on an image counts
+    // as a tap — open the lightbox directly rather than waiting on a native
+    // click event, since pointer capture above can keep that from firing
+    if (checkForTap && e && tapTarget) {
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      const duration = performance.now() - tapStartTime;
+      if (distance < TAP_MAX_DISTANCE && duration < TAP_MAX_DURATION && typeof window.urbnnOpenLightbox === 'function') {
+        window.urbnnOpenLightbox(tapTarget);
+      }
+    }
+    tapTarget = null;
   }
-  viewport.addEventListener('pointerup', endDrag);
-  viewport.addEventListener('pointerleave', endDrag);
+  viewport.addEventListener('pointerup', (e) => endDrag(e, true));
+  viewport.addEventListener('pointerleave', (e) => endDrag(e, false));
+})();
+</script>
+
+<!-- ============================================================
+     LIGHTBOX SCRIPT — fullscreen click-to-view with hover zoom
+     Any image inside a postcard, product tile, the hero frame, or
+     the about photo opens the lightbox when clicked. The caption
+     at the bottom is built from whatever text already lives next
+     to that image (title, place, materials, price) — nothing to
+     maintain separately when you swap a photo or edit its copy.
+     ============================================================ -->
+<script>
+(function () {
+  const lightbox = document.getElementById('lightbox');
+  const stage = document.getElementById('lightbox-stage');
+  const lightboxImg = document.getElementById('lightbox-img');
+  const lightboxTitle = document.getElementById('lightbox-title');
+  const lightboxMeta = document.getElementById('lightbox-meta');
+  const closeBtn = document.getElementById('lightbox-close');
+
+  // postcard images are deliberately left out here — the carousel's own
+  // tap-vs-drag detection (see CAROUSEL SCRIPT) opens the lightbox for those
+  // via window.urbnnOpenLightbox, since pointer capture used for drag/swipe
+  // can unreliably suppress the native click event this listener relies on
+  const clickableImages = document.querySelectorAll(
+    '.grid-item-img img, .hero-figure .frame img, .about-diagram img'
+  );
+
+  // reads whatever title/place/material/price text already sits next to
+  // the clicked image, so the caption stays correct without duplicating data
+  function buildCaption(img) {
+    const card = img.closest('.postcard, .grid-item, .hero-figure, .about-diagram');
+    if (!card) return { title: '', meta: '' };
+
+    if (card.classList.contains('postcard')) {
+      const titleEl = card.querySelector('h3');
+      const placeEl = card.querySelector('.place');
+      const foot = card.querySelector('.postcard-foot');
+      const materialEl = foot ? foot.querySelector('span') : null;
+      const priceEl = foot ? foot.querySelector('b') : null;
+      const title = titleEl ? titleEl.textContent : '';
+      const place = placeEl ? placeEl.textContent : '';
+      const material = materialEl ? materialEl.textContent : '';
+      const price = priceEl ? priceEl.textContent : '';
+      return { title, meta: [place, material, price].filter(Boolean).join(' · ') };
+    }
+
+    if (card.classList.contains('grid-item')) {
+      const titleEl = card.querySelector('h3');
+      const foot = card.querySelector('.grid-item-foot');
+      const materialEl = foot ? foot.querySelector('span') : null;
+      const priceEl = foot ? foot.querySelector('b') : null;
+      const title = titleEl ? titleEl.textContent : '';
+      const material = materialEl ? materialEl.textContent : '';
+      const price = priceEl ? priceEl.textContent : '';
+      return { title, meta: [material, price].filter(Boolean).join(' · ') };
+    }
+
+    if (card.classList.contains('hero-figure')) {
+      const spans = card.querySelectorAll('.cap span');
+      const place = spans[0] ? spans[0].textContent : '';
+      const size = spans[1] ? spans[1].textContent : '';
+      return { title: place, meta: size };
+    }
+
+    if (card.classList.contains('about-diagram')) {
+      return { title: 'About me', meta: '' };
+    }
+
+    return { title: '', meta: '' };
+  }
+
+  function openLightbox(img) {
+    const caption = buildCaption(img);
+    lightboxImg.src = img.src;
+    lightboxImg.alt = img.alt || '';
+    lightboxTitle.textContent = caption.title;
+    lightboxMeta.textContent = caption.meta;
+    lightboxImg.style.setProperty('--zoom-scale', 1);
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden'; // stop the page from scrolling behind the viewer
+  }
+
+  // exposed globally so the carousel's pointer-based tap detection can open
+  // this same lightbox for postcard images — see CAROUSEL SCRIPT
+  window.urbnnOpenLightbox = openLightbox;
+
+  function closeLightbox() {
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+    lightboxImg.style.setProperty('--zoom-scale', 1);
+  }
+
+  clickableImages.forEach((img) => {
+    img.addEventListener('click', () => openLightbox(img));
+  });
+
+  closeBtn.addEventListener('click', closeLightbox);
+
+  // clicking the dark backdrop (anywhere that isn't the photo itself) closes it too
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox || e.target === stage) closeLightbox();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && lightbox.classList.contains('open')) closeLightbox();
+  });
+
+  // hover-zoom: scales the image up and keeps it centered on wherever the cursor is
+  const ZOOM_SCALE = 2.2;
+  lightboxImg.addEventListener('mousemove', (e) => {
+    const rect = lightboxImg.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    lightboxImg.style.setProperty('--zoom-x', x + '%');
+    lightboxImg.style.setProperty('--zoom-y', y + '%');
+    lightboxImg.style.setProperty('--zoom-scale', ZOOM_SCALE);
+  });
+  lightboxImg.addEventListener('mouseleave', () => {
+    lightboxImg.style.setProperty('--zoom-scale', 1);
+  });
 })();
 </script>
 </body>
