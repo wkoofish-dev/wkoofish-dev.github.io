@@ -1,10 +1,854 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Urbnn</title>
-  <link rel="icon" type="image/svg" href="/files/urbnnlogo.svg">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Urbnn Maps Studio</title>
+<link rel="icon" type="image/svg" href="/files/images/urbnnlogo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     GLOBAL TOKENS — change colors/fonts/sizes for the whole page here
+     ============================================================ */
+  :root{
+    --bg:#F2F1ED;
+    --panel:#E9E7E0;
+    --ink:#1A1815;
+    --muted:#726E64;
+    --wood:#C9A876;
+    --slate:#4A5A63;
+    --line:#D6D3C9;
+    --card-bg:#FFFFFF;
+    --media-bg:#E9E7E0;
+
+    /* carousel card size — bump this up/down to change how many cards show at once */
+    --carousel-card-width: 440px;
+    --carousel-gap: 36px;
+  }
+
+  /* ============================================================
+     DARK MODE — activated by adding data-theme="dark" to <html>
+     (done via the toggle button script at the bottom of the page).
+     Default on load is always light — see the theme script for
+     the localStorage logic that remembers a visitor's choice.
+     Note: --media-bg is intentionally NOT overridden here, so the
+     illustration/photo areas (postcards, product tiles, hero art)
+     stay on a light backdrop in both themes, like a printed photo.
+     ============================================================ */
+  :root[data-theme="dark"]{
+    --bg:#1B1A17;
+    --panel:#242220;
+    --ink:#F3F1EA;
+    --muted:#A79F8F;
+    --wood:#C9A876;
+    --slate:#93A8B3;
+    --line:#3A3733;
+    --card-bg:#2C2A26;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    font-weight:400;
+    line-height:1.65;
+    transition:background-color .25s ease, color .25s ease;
+  }
+  h1,h2,h3{font-family:'Bricolage Grotesque', sans-serif; font-weight:500; line-height:1.08; letter-spacing:-0.02em;}
+  a{color:inherit; text-decoration:none;}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 44px;}
+  img,svg{display:block; max-width:100%;}
+
+  /* ============================================================
+     NAV
+     ============================================================ */
+  nav{padding:30px 0; border-bottom:1px solid var(--line); transition:border-color .25s ease;}
+  nav .wrap{display:flex; justify-content:space-between; align-items:center;}
+  .logo{font-family:'Bricolage Grotesque'; font-size:1.2rem; font-weight:600; display:flex; align-items:center; gap:10px;}
+  .navlinks{display:flex; gap:32px; font-size:0.92rem; color:var(--muted);}
+  .navlinks a:hover{color:var(--ink);}
+  .navcta{border-bottom:1px solid var(--ink); padding-bottom:2px; font-weight:500; font-size:0.92rem;}
+  @media (max-width:820px){.navlinks{display:none;}}
+
+  /* nav-actions groups "Get in touch" + the dark mode toggle together
+     so they sit as one unit on the right side of the nav */
+  .nav-actions{display:flex; align-items:center; gap:20px;}
+  .theme-toggle{
+    width:38px; height:38px; border-radius:50%;
+    border:1px solid var(--line); background:transparent;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; color:var(--ink);
+    transition:border-color .2s ease, background-color .2s ease;
+  }
+  .theme-toggle:hover{border-color:var(--slate);}
+  .theme-toggle svg{width:18px; height:18px;}
+  .theme-toggle .icon-moon{display:none;}
+  :root[data-theme="dark"] .theme-toggle .icon-sun{display:none;}
+  :root[data-theme="dark"] .theme-toggle .icon-moon{display:block;}
+
+  :root[data-theme="dark"] .logo img{
+  filter: invert(1);
+  transition: filter .25s ease;
+  }
+
+  /* shared small "eyebrow" label style — still used in a couple of places */
+  .cat-no{color:var(--muted); font-size:0.85rem; margin-bottom:26px; display:flex; align-items:center; gap:10px;}
+  .cat-no .dot{width:6px; height:6px; border-radius:50%; background:var(--slate); display:inline-block;}
+
+  /* ============================================================
+     SECTION 1 — HERO (text left, large picture right)
+     ============================================================ */
+  .hero{padding:70px 0 110px;}
+  .hero-grid{display:grid; grid-template-columns:1.1fr 0.9fr; gap:60px; align-items:start;}
+  @media (max-width:900px){.hero-grid{grid-template-columns:1fr;}}
+  h1.hero-title{font-size:clamp(2.6rem,5.4vw,4.4rem); max-width:11ch; margin-bottom:32px;}
+  .hero-sub{color:var(--muted); max-width:40ch; font-size:1.05rem; margin-bottom:40px;}
+  .btnrow{display:flex; gap:18px; align-items:center; flex-wrap:wrap;}
+  .btn-primary{background:var(--ink); color:var(--bg); padding:16px 30px; font-size:0.95rem; display:inline-block; border:1px solid var(--ink); cursor:pointer; transition:background-color .2s ease, border-color .2s ease, color .2s ease;}
+  .btn-primary:hover{background:var(--slate); border-color:var(--slate);}
+  .btn-ghost{border-bottom:1px solid var(--ink); padding-bottom:2px; font-size:0.95rem;}
+
+  .hero-figure{position:relative;}
+  .hero-figure .frame{aspect-ratio:1/1; background:var(--media-bg); position:relative; overflow:hidden;}
+  .hero-figure svg{width:100%; height:100%;}
+  .hero-figure .cap{display:flex; justify-content:space-between; margin-top:14px; font-size:0.82rem; color:var(--muted);}
+
+  /* ============================================================
+     STRIP — thin trust-signal bar between sections
+     ============================================================ */
+  .strip{border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:24px 0; transition:border-color .25s ease;}
+  .strip .wrap{display:flex; justify-content:space-between; flex-wrap:wrap; gap:14px 30px; color:var(--muted); font-size:0.9rem;}
+  .strip b{color:var(--ink);}
+
+  .section{padding:110px 0;}
+  .section-head{max-width:640px; margin:0 auto 60px; text-align:center;}
+  .section-head h2{font-size:clamp(1.9rem,3.2vw,2.6rem); margin-bottom:16px;}
+  .section-head p{color:var(--muted); font-size:1.02rem;}
+
+  /* ============================================================
+     SECTION 2 — POSTCARD CAROUSEL (auto-scrolls right to left)
+     Sized so roughly 3 cards are visible at once — see
+     --carousel-card-width / --carousel-gap in the tokens above.
+     ============================================================ */
+  .carousel-viewport{
+    overflow:hidden;
+    cursor:grab;
+    -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
+            mask-image:linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
+    touch-action:pan-y; /* claims horizontal swipes for the carousel, leaves vertical page scroll alone */
+  }
+  .carousel-viewport.dragging{ cursor:grabbing; }
+  .carousel-track{
+    display:flex;
+    gap:var(--carousel-gap);
+    width:max-content;
+    will-change:transform;
+  }
+  .carousel-track.dragging{ user-select:none; }
+  .postcard{
+    flex:0 0 var(--carousel-card-width);
+    background:var(--card-bg); border:1px solid var(--line); padding:26px 26px 32px;
+    transition:background-color .25s ease, border-color .25s ease;
+  }
+  .postcard-img{aspect-ratio:1/1; background:var(--media-bg); margin-bottom:22px; position:relative; overflow:hidden; border:1px solid var(--line);}
+  .postcard-img img{width:100%; height:100%; object-fit:cover;}
+  .postcard h3{font-size:1.5rem; margin-bottom:8px; font-weight:500;}
+  .postcard .place{color:var(--slate); font-size:0.94rem; margin-bottom:12px; display:block;}
+  .postcard p{color:var(--muted); font-size:1rem; margin-bottom:18px;}
+  .postcard-foot{display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--line); padding-top:16px; font-size:0.95rem;}
+  .postcard-foot b{font-family:'Bricolage Grotesque'; font-weight:600; font-size:1.15rem;}
+
+  /* ============================================================
+     SECTION 3 — PRODUCT GRID (3 across x 3 down)
+     Swap/add .grid-item blocks to change what shows here.
+     ============================================================ */
+  .product-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:36px;
+  }
+  @media (max-width:900px){ .product-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:600px){ .product-grid{ grid-template-columns:1fr; } }
+  .grid-item{background:var(--card-bg); border:1px solid var(--line); transition:background-color .25s ease, border-color .25s ease;}
+  .grid-item-img{aspect-ratio:1/1; background:var(--media-bg); overflow:hidden;}
+  .grid-item-img img{width:100%; height:100%; object-fit:cover;}
+  .grid-item-body{padding:22px;}
+  .grid-item-body h3{font-size:1.15rem; margin-bottom:6px; font-weight:500;}
+  .grid-item-body p{color:var(--muted); font-size:0.9rem; margin-bottom:14px;}
+  .grid-item-foot{display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--line); padding-top:12px; font-size:0.9rem;}
+  .grid-item-foot b{font-family:'Bricolage Grotesque'; font-weight:600;}
+
+  /* ============================================================
+     SECTION 4 — ABOUT ME (was the testimonial / field-notes block)
+     ============================================================ */
+  .about{background:var(--panel); border-top:1px solid var(--line); border-bottom:1px solid var(--line); transition:background-color .25s ease, border-color .25s ease;}
+  .about-grid{display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center;}
+  @media (max-width:820px){.about-grid{grid-template-columns:1fr;}}
+  .about-text .cat-no{margin-bottom:18px;}
+  .about-text p.quote{font-family:'Bricolage Grotesque'; font-weight:400; font-size:1.15rem; max-width:26ch; color:var(--ink);}
+  .about-diagram{border:1px solid var(--line); background:var(--media-bg); overflow:hidden; aspect-ratio:380/300;}
+  .about-diagram img{width:100%; height:100%; object-fit:cover;}
+
+  /* ============================================================
+     SECTION 5 — GET IN TOUCH (was the "where should we start" CTA)
+     ============================================================ */
+  .contact{padding:110px 0; text-align:center;}
+  .contact-box{
+    max-width:640px; margin:0 auto; background:var(--panel); border:1px solid var(--line);
+    padding:60px 50px; transition:background-color .25s ease, border-color .25s ease;
+  }
+  .contact-box h2{font-size:clamp(2rem,4vw,2.6rem); margin-bottom:16px;}
+  .contact-box > p{color:var(--muted); margin-bottom:36px; max-width:38ch; margin-left:auto; margin-right:auto;}
+  .contact-form{display:flex; flex-direction:column; gap:20px; text-align:left;}
+  .field{display:flex; flex-direction:column; gap:8px;}
+  .field label{font-size:0.88rem; color:var(--slate); font-weight:500;}
+  .field input,
+  .field textarea{
+    background:var(--card-bg); border:1px solid var(--line); padding:13px 16px;
+    font-family:'Inter'; font-size:0.95rem; color:var(--ink); resize:vertical;
+    transition:background-color .25s ease, border-color .25s ease, color .25s ease;
+  }
+  .field input:focus,
+  .field textarea:focus{outline:2px solid var(--slate); outline-offset:1px;}
+  .contact-form .btn-primary{margin-top:6px; width:100%; text-align:center;}
+
+  /* ============================================================
+     FOOTER
+     ============================================================ */
+  footer{padding:44px 0; border-top:1px solid var(--line); transition:border-color .25s ease;}
+  .foot-grid{display:flex; justify-content:space-between; flex-wrap:wrap; gap:20px; color:var(--muted); font-size:0.9rem;}
+  .foot-grid a:hover{color:var(--ink);}
+
+  /* ============================================================
+     LIGHTBOX — fullscreen image viewer
+     Hidden by default; the "open" class reveals it. Any product,
+     postcard, hero, or about photo opens here when clicked.
+     Hovering the enlarged image zooms in on whatever point the
+     mouse is over, via the --zoom-x / --zoom-y / --zoom-scale
+     custom properties, set live from JS in the LIGHTBOX SCRIPT.
+     ============================================================ */
+  .lightbox{
+    position:fixed; inset:0; z-index:1000;
+    background:rgba(10,9,8,0.94);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    opacity:0; visibility:hidden; transition:opacity .2s ease;
+  }
+  .lightbox.open{ opacity:1; visibility:visible; }
+  .lightbox-close{
+    position:absolute; top:24px; right:28px; z-index:1001;
+    width:44px; height:44px; border-radius:50%;
+    border:1px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.06);
+    color:#F3F1EA; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:background-color .2s ease, border-color .2s ease;
+  }
+  .lightbox-close:hover{ background:rgba(255,255,255,0.16); border-color:rgba(255,255,255,0.5); }
+  .lightbox-close svg{ width:20px; height:20px; }
+  .lightbox-stage{
+    width:100%; max-width:1100px; flex:1; display:flex; align-items:center; justify-content:center;
+    padding:80px 40px 20px; overflow:hidden;
+  }
+  .lightbox-stage img{
+    max-width:100%; max-height:78vh; width:auto; height:auto;
+    object-fit:contain; cursor:zoom-in;
+    transform-origin: var(--zoom-x, 50%) var(--zoom-y, 50%);
+    transform:scale(var(--zoom-scale, 1));
+    transition:transform .08s linear;
+  }
+  .lightbox-info{
+    width:100%; max-width:1100px; padding:0 40px 36px;
+    display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px 20px;
+    color:#F3F1EA;
+  }
+  .lightbox-title{ font-family:'Bricolage Grotesque'; font-size:1.2rem; font-weight:500; }
+  .lightbox-meta{ color:#A79F8F; font-size:0.95rem; }
+
+  /* every image that opens the lightbox gets a pointer cursor as a hint */
+  .postcard-img img, .grid-item-img img, .hero-figure .frame img, .about-diagram img{
+    cursor:pointer;
+  }
+</style>
 </head>
 <body>
-  <h1>Website currently under construction. To get in contact, email hi@urbnn.com</h1>
+
+<!-- ============================================================
+     NAV
+     ============================================================ -->
+<nav>
+  <div class="wrap">
+    <div class="logo">
+    <img src="files/urbnnlogo.svg" alt="Urbnn" width="40" height="40">
+      Urbnn
+    </div>
+    <div class="navlinks">
+      <div>More</div>
+      <div>Coming</div>
+      <div>Soon</div>
+      <!--
+      <a href="#work">More</a>
+      -->
+    </div>
+    <!-- "Get in touch" + the dark mode toggle live together on the right -->
+    <div class="nav-actions">
+      <a href="#contact" class="navcta">Get in touch</a>
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle dark mode">
+        <!-- sun icon: shown in light mode -->
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="12" cy="12" r="4.2"/>
+          <path d="M12 2.5v2.4M12 19.1v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+        </svg>
+        <!-- moon icon: shown in dark mode -->
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5Z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ============================================================
+     SECTION 1 — HERO
+     Text on the left, one large picture on the right.
+     ============================================================ -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <h1 class="hero-title">We are Urbnn Maps Studio.</h1>
+      <p class="hero-sub">We turn the streets, coastlines, and mountains you've actually stood on into a laser-cut keepsake — the kind you hang on a wall, not stuff away in a drawer.</p>
+      <div class="btnrow">
+        <a href="#work" class="btn-primary">Check out our Maps!</a>
+        <a href="#shop" class="btn-ghost">Browse our other products</a>
+      </div>
+    </div>
+    <div class="hero-figure">
+      <div class="frame">
+        <img src="files/images/URBNNIMAGEGUITAR2.png" alt="Featured laser-engraved wood map">
+      </div>
+      <div class="cap"><span>Nashville, Tennessee</span><span>Birch, 12x38"</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     STRIP — trust signals
+     ============================================================ -->
+<div class="strip">
+  <div class="wrap">
+    <div><b>Quality Made</b> in the USA</div>
+    <div><b>Accurate</b> data from reliable sources</div>
+    <div><b>Human</b> assembled</div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SECTION 2 — POSTCARD CAROUSEL
+     Auto-scrolls right to left, sized so ~3 cards show at once.
+     The <div id="track"> list is duplicated once at the bottom
+     (marked aria-hidden) so the loop wraps seamlessly.
+     Each .postcard-img now holds a placeholder <img> pointing at
+     files/sampleimage.png — swap the src on each one for the real
+     product photo whenever it's ready.
+     ============================================================ -->
+<section class="section" id="work">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Laser maps</h2>
+      <p>Pick the place that means something, and tell us why — we engrave a short note on the back of every piece.</p>
+    </div>
+  </div>
+  <div class="carousel-viewport">
+    <div class="carousel-track" id="track">
+      <div class="postcard">
+        <div class="postcard-img"><img src="files/images/URBNNIMAGEHS1x1FRAME.png" alt="Home Sweet Home"></div>
+        <span class="place">Hot Springs, AR</span>
+        <h3>Home Sweet Home</h3>
+        <p>Hand made per order.</p>
+        <div class="postcard-foot"><span>Birch · Walnut</span><b>$250</b></div>
+      </div>
+      <div class="postcard">
+        <div class="postcard-img"><img src="files/images/URBNNIMAGELR1x1FRAME.png" alt="Arkansas' Capitol"></div>
+        <span class="place">Little Rock, AR</span>
+        <h3>Arkansas' Capitol</h3>
+        <p>Regnat Populus</p>
+        <div class="postcard-foot"><span>Birch · Walnut</span><b>$250</b></div>
+      </div>
+      <div class="postcard">
+        <div class="postcard-img"><img src="files/images/URBNNIMAGEBATH.png" alt="Spa City"></div>
+        <span class="place">Hot Springs, AR</span>
+        <h3>Spa City</h3>
+        <p>Where Spa meets City</p>
+        <div class="postcard-foot"><span>Birch · Stain</span><b>$100</b></div>
+      </div>
+      <div class="postcard">
+        <div class="postcard-img"><img src="files/images/URBNNIMAGEHSVCart.png" alt="Golf at the Village"></div>
+        <span class="place">Hot Springs Village, AR</span>
+        <h3>Golf at the Village</h3>
+        <p>Down for a round, anyone?</p>
+        <div class="postcard-foot"><span>Birch</span><b>$80</b></div>
+      </div>
+      <div class="postcard">
+        <div class="postcard-img"><img src="files/images/URBNNIMAGEFishMap.png" alt="Serenity on the Lake"></div>
+        <span class="place">Lake Ouachita, AR</span>
+        <h3>Serenity on the Lake</h3>
+        <p>SHH! You'll scare the fish!</p>
+        <div class="postcard-foot"><span>Birch · MDF</span><b>$150</b></div>
+      </div>
+      <div class="postcard">
+        <div class="postcard-img"><img src="files/images/URBNNIMAGEGUITAR2.png" alt="Jammin' in Nashville"></div>
+        <span class="place">Nashville, TN</span>
+        <h3>Jammin' in Nashville</h3>
+        <p>Known for its music</p>
+        <div class="postcard-foot"><span>Birch · MDF</span><b>$200</b></div>
+      </div>
+      <!-- duplicate set below — keeps the scroll looping seamlessly, not visible to screen readers -->
+      <div class="postcard" aria-hidden="true">
+        <div class="postcard-img"><img src="files/images/URBNNIMAGEHS1x1FRAME.png" alt="Home Sweet Home"></div>
+        <span class="place">Hot Springs, AR</span>
+        <h3>Home Sweet Home</h3>
+        <p>Hand made per order.</p>
+        <div class="postcard-foot"><span>Birch · Walnut</span><b>$250</b></div>
+      </div>
+      <div class="postcard" aria-hidden="true">
+        <div class="postcard-img"><img src="files/images/URBNNIMAGELR1x1FRAME.png" alt="Arkansas' Capitol"></div>
+        <span class="place">Little Rock, AR</span>
+        <h3>Arkansas' Capitol</h3>
+        <p>Regnat Populus</p>
+        <div class="postcard-foot"><span>Birch · Walnut</span><b>$250</b></div>
+      </div>
+      <div class="postcard" aria-hidden="true">
+        <div class="postcard-img"><img src="files/images/URBNNIMAGEBATH.png" alt="Spa City"></div>
+        <span class="place">Hot Springs, AR</span>
+        <h3>Spa City</h3>
+        <p>Where Spa meets City</p>
+        <div class="postcard-foot"><span>Birch · Stain</span><b>$100</b></div>
+      </div>
+      <div class="postcard">
+        <div class="postcard-img"><img src="files/images/URBNNIMAGEHSVCart.png" alt="Golf at the Village"></div>
+        <span class="place">Hot Springs Village, AR</span>
+        <h3>Golf at the Village</h3>
+        <p>Down for a round, anyone?</p>
+        <div class="postcard-foot"><span>Birch</span><b>$80</b></div>
+      </div>
+      <div class="postcard" aria-hidden="true">
+        <div class="postcard-img"><img src="files/images/URBNNIMAGEFishMap.png" alt="Serenity on the Lake"></div>
+        <span class="place">Lake Ouachita, AR</span>
+        <h3>Serenity on the Lake</h3>
+        <p>SHH! You'll scare the fish!</p>
+        <div class="postcard-foot"><span>Birch · MDF</span><b>$150</b></div>
+      </div>
+      <div class="postcard" aria-hidden="true">
+        <div class="postcard-img"><img src="files/images/URBNNIMAGEGUITAR2.png" alt="Jammin' in Nashville"></div>
+        <span class="place">Nashville, TN</span>
+        <h3>Jammin' in Nashville</h3>
+        <p>Known for its music</p>
+        <div class="postcard-foot"><span>Birch · MDF</span><b>$200</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 3 — PRODUCT GRID (3 across x 3 down)
+     Swap out any .grid-item to change what's shown — each one is
+     self-contained (image, title, blurb, price). Each image is a
+     placeholder pointing at files/sampleimage.png for now.
+     ============================================================ -->
+<section class="section" id="shop" style="background:var(--panel); border-top:1px solid var(--line); border-bottom:1px solid var(--line);">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>More from the shop</h2>
+      <p>Beyond maps — small wood-cut pieces that make good gifts on their own.</p>
+    </div>
+    <div class="product-grid">
+      <div class="grid-item">
+        <div class="grid-item-img"><img src="files/images/URBNNIMAGEMagLakeHamilton.png" alt="MagLakeHamilton"></div>
+        <div class="grid-item-body"><h3>Lake Hamilton</h3><p>3.5" Fridge Magnet of Lake Hamilton.</p><div class="grid-item-foot"><span>Birch</span><b>$10</b></div></div>
+      </div>
+      <div class="grid-item">
+        <div class="grid-item-img"><img src="files/images/URBNNIMAGEMagLakeOuachita.png" alt="MagLakeOuachita"></div>
+        <div class="grid-item-body"><h3>Lake Ouachita</h3><p>3.5" Fridge Magnet of Lake Ouachita.</p><div class="grid-item-foot"><span>Birch</span><b>$10</b></div></div>
+      </div>
+      <div class="grid-item">
+        <div class="grid-item-img"><img src="files/images/URBNNIMAGEMagLakeDegray.png" alt="MagLakeDegray"></div>
+        <div class="grid-item-body"><h3>Degray Lake</h3><p>3.5" Fridge Magnet of Degray Lake</p><div class="grid-item-foot"><span>Birch</span><b>$10</b></div></div>
+      </div>
+      <div class="grid-item">
+        <div class="grid-item-img"><img src="files/images/URBNNIMAGEKeyAR1.png" alt="KeyAR1"></div>
+        <div class="grid-item-body"><h3>Arkansas Keychain</h3><p>3.5" Keychain of Arkansas.</p><div class="grid-item-foot"><span>Birch</span><b>$6</b></div></div>
+      </div>
+      <div class="grid-item">
+        <div class="grid-item-img"><img src="files/images/URBNNIMAGEKEYARsmall.png" alt="KeyARsmall"></div>
+        <div class="grid-item-body"><h3>Arkansas Keychain</h3><p>1" Keychain of Arkansas</p><div class="grid-item-foot"><span>Birch</span><b>$4</b></div></div>
+      </div>
+      <div class="grid-item">
+        <div class="grid-item-img"><img src="files/images/URBNNIMAGESYLAR.png" alt="See you later!"></div>
+        <div class="grid-item-body"><h3>See You Later, Alligator!</h3></h3><p>See You Later Fridge Magnet</p><div class="grid-item-foot"><span>Birch</span><b>$28</b></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 4 — ABOUT ME (was the testimonial / field-notes block)
+     Header text + quote (same quote as before, just smaller and
+     without the attribution line) alongside an image.
+     ============================================================ -->
+<section class="about section" id="about">
+  <div class="wrap about-grid">
+    <div class="about-text">
+      <div class="cat-no"><span class="dot"></span>About me</div>
+      <p class="quote">"Hey! I'm Wesley, Founder of Urbnn Maps Studio. I've always enjoyed creating, and tinkering. I've put that same spirit into my products, and hopefully it shows!"</p>
+    </div>
+    <div class="about-diagram">
+      <img src="files/images/URBNNIMAGEme.JPG" alt="Wesley, founder of Urbnn Maps Studio">
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 5 — GET IN TOUCH (was the "where should we start" CTA)
+     Static contact form — wire up the <form> action / a script
+     to actually send these fields somewhere.
+     ============================================================ -->
+<section class="contact" id="contact">
+  <div class="wrap">
+    <div class="contact-box">
+      <h2>Get in touch</h2>
+      <p>To get in contact, fill out this form</p>
+      <form class="contact-form" action="https://api.web3forms.com/submit" method="POST">
+        <input type="hidden" name="access_key" value="d782b4d0-2eaa-4b45-ab6b-d8a8bcaaa82d">
+        <div class="field">
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" placeholder="Your name" required>
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" placeholder="you@example.com" required>
+        </div>
+        <div class="field">
+          <label for="message">Message</label>
+          <textarea id="message" name="message" rows="4" placeholder="Your message" required></textarea>
+        </div>
+        <button type="submit" class="btn-primary">Send message</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer>
+  <div class="wrap foot-grid">
+    <div>Urbnn Maps Studio, USA</div>
+    <div style="display:flex; gap:24px;">
+      <div>More</div>
+      <div>Coming</div>
+      <div>Soon</div>
+      <!--
+      <a href="#">Care guide</a>
+      -->
+    </div>
+  </div>
+</footer>
+
+<!-- ============================================================
+     LIGHTBOX — fullscreen image viewer
+     Click any product/postcard/hero/about photo to open it full
+     screen here. Hover over the enlarged image for a zoom effect
+     that follows the cursor. Close with the X, by clicking the
+     dark backdrop, or by pressing Escape.
+     ============================================================ -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightbox-close" type="button" aria-label="Close image viewer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+      <path d="M5 5l14 14M19 5L5 19"/>
+    </svg>
+  </button>
+  <div class="lightbox-stage" id="lightbox-stage">
+    <img src="" alt="" id="lightbox-img">
+  </div>
+  <div class="lightbox-info" id="lightbox-info">
+    <span class="lightbox-title" id="lightbox-title"></span>
+    <span class="lightbox-meta" id="lightbox-meta"></span>
+  </div>
+</div>
+
+<!-- ============================================================
+     THEME SCRIPT — dark mode toggle
+     Default is always light on a fresh visit. If a visitor has
+     picked dark mode before, we remember it via localStorage and
+     re-apply it on the next page load.
+     ============================================================ -->
+<script>
+(function () {
+  const root = document.documentElement;
+  const toggleBtn = document.getElementById('theme-toggle');
+
+  // restore a previously chosen theme, if any — default stays light otherwise
+  const saved = localStorage.getItem('urbnn-theme');
+  if (saved === 'dark') {
+    root.setAttribute('data-theme', 'dark');
+  }
+
+  toggleBtn.addEventListener('click', function () {
+    const isDark = root.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+      root.removeAttribute('data-theme');
+      localStorage.setItem('urbnn-theme', 'light');
+    } else {
+      root.setAttribute('data-theme', 'dark');
+      localStorage.setItem('urbnn-theme', 'dark');
+    }
+  });
+})();
+</script>
+
+<!-- ============================================================
+     CAROUSEL SCRIPT — drag/swipe with momentum on release
+     ============================================================ -->
+<script>
+(function () {
+  const viewport = document.querySelector('.carousel-viewport');
+  const track = document.getElementById('track');
+
+  let offset = 0;
+  let speed = 0.6;           // auto-scroll speed, px per frame
+  let isDragging = false;
+  let isHovering = false;
+  let startX = 0;
+  let startY = 0;
+  let startOffset = 0;
+  let halfWidth = 0;
+
+  // --- tap detection (so a click on a postcard still opens the lightbox) ---
+  // Pointer capture (used below for drag/swipe) can unreliably suppress the
+  // browser's native "click" event on the image underneath, which is why the
+  // lightbox used to open inconsistently on the carousel. Instead, we track
+  // the press ourselves and decide directly whether it was a tap or a drag.
+  let tapTarget = null;      // the <img> that was pressed, if any
+  let tapStartTime = 0;
+  const TAP_MAX_DISTANCE = 6;   // px of movement still counted as a tap, not a drag
+  const TAP_MAX_DURATION = 600; // ms — longer than this is treated as a drag, not a tap
+
+  // --- momentum tracking ---
+  let velocity = 0;                // current momentum, px per frame
+  let lastX = 0;
+  let lastTime = 0;
+  const friction = 0.95;           // how slowly momentum decays — closer to 1 = glides further
+  const velocityThreshold = 0.1;   // below this, momentum stops and auto-scroll takes back over
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion) speed = 0;
+
+  function measure(){ halfWidth = track.scrollWidth / 2; }
+  measure();
+  window.addEventListener('resize', measure);
+
+  function applyTransform(){
+    if (offset <= -halfWidth) offset += halfWidth;
+    if (offset > 0) offset -= halfWidth;
+    track.style.transform = `translateX(${offset}px)`;
+  }
+
+  function tick(){
+    if (isDragging) {
+      // position already being set live in pointermove — nothing to do here
+    } else if (Math.abs(velocity) > velocityThreshold) {
+      offset += velocity;
+      velocity *= friction;   // momentum decays a little each frame
+      applyTransform();
+    } else if (!isHovering) {
+      offset -= speed;        // back to normal auto-scroll once momentum runs out
+      applyTransform();
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  viewport.addEventListener('mouseenter', () => isHovering = true);
+  viewport.addEventListener('mouseleave', () => isHovering = false);
+
+  viewport.addEventListener('pointerdown', (e) => {
+    isDragging = true;
+    velocity = 0;              // cancel any momentum still playing out from a previous drag
+    startX = e.clientX;
+    startY = e.clientY;
+    startOffset = offset;
+    lastX = e.clientX;
+    lastTime = performance.now();
+
+    // remember what was actually pressed, and when, for the tap check on release
+    tapTarget = e.target.closest('img');
+    tapStartTime = lastTime;
+
+    viewport.classList.add('dragging');
+    track.classList.add('dragging');
+    viewport.setPointerCapture(e.pointerId);
+  });
+
+  viewport.addEventListener('pointermove', (e) => {
+    if (!isDragging) return;
+    offset = startOffset + (e.clientX - startX);
+    applyTransform();
+
+    // measure how fast the pointer is moving right now, to use as release velocity
+    const now = performance.now();
+    const dt = now - lastTime;
+    if (dt > 0) {
+      velocity = ((e.clientX - lastX) / dt) * 16; // convert px/ms to px/frame at ~60fps
+    }
+    lastX = e.clientX;
+    lastTime = now;
+  });
+
+  function endDrag(e, checkForTap){
+    if (!isDragging) return;
+    isDragging = false;
+    viewport.classList.remove('dragging');
+    track.classList.remove('dragging');
+    // whatever `velocity` was at the moment of release now drives the momentum glide
+
+    // a clean release (little movement, released quickly) on an image counts
+    // as a tap — open the lightbox directly rather than waiting on a native
+    // click event, since pointer capture above can keep that from firing
+    if (checkForTap && e && tapTarget) {
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      const duration = performance.now() - tapStartTime;
+      if (distance < TAP_MAX_DISTANCE && duration < TAP_MAX_DURATION && typeof window.urbnnOpenLightbox === 'function') {
+        window.urbnnOpenLightbox(tapTarget);
+      }
+    }
+    tapTarget = null;
+  }
+  viewport.addEventListener('pointerup', (e) => endDrag(e, true));
+  viewport.addEventListener('pointerleave', (e) => endDrag(e, false));
+})();
+</script>
+
+<!-- ============================================================
+     LIGHTBOX SCRIPT — fullscreen click-to-view with hover zoom
+     Any image inside a postcard, product tile, the hero frame, or
+     the about photo opens the lightbox when clicked. The caption
+     at the bottom is built from whatever text already lives next
+     to that image (title, place, materials, price) — nothing to
+     maintain separately when you swap a photo or edit its copy.
+     ============================================================ -->
+<script>
+(function () {
+  const lightbox = document.getElementById('lightbox');
+  const stage = document.getElementById('lightbox-stage');
+  const lightboxImg = document.getElementById('lightbox-img');
+  const lightboxTitle = document.getElementById('lightbox-title');
+  const lightboxMeta = document.getElementById('lightbox-meta');
+  const closeBtn = document.getElementById('lightbox-close');
+
+  // postcard images are deliberately left out here — the carousel's own
+  // tap-vs-drag detection (see CAROUSEL SCRIPT) opens the lightbox for those
+  // via window.urbnnOpenLightbox, since pointer capture used for drag/swipe
+  // can unreliably suppress the native click event this listener relies on
+  const clickableImages = document.querySelectorAll(
+    '.grid-item-img img, .hero-figure .frame img, .about-diagram img'
+  );
+
+  // reads whatever title/place/material/price text already sits next to
+  // the clicked image, so the caption stays correct without duplicating data
+  function buildCaption(img) {
+    const card = img.closest('.postcard, .grid-item, .hero-figure, .about-diagram');
+    if (!card) return { title: '', meta: '' };
+
+    if (card.classList.contains('postcard')) {
+      const titleEl = card.querySelector('h3');
+      const placeEl = card.querySelector('.place');
+      const foot = card.querySelector('.postcard-foot');
+      const materialEl = foot ? foot.querySelector('span') : null;
+      const priceEl = foot ? foot.querySelector('b') : null;
+      const title = titleEl ? titleEl.textContent : '';
+      const place = placeEl ? placeEl.textContent : '';
+      const material = materialEl ? materialEl.textContent : '';
+      const price = priceEl ? priceEl.textContent : '';
+      return { title, meta: [place, material, price].filter(Boolean).join(' · ') };
+    }
+
+    if (card.classList.contains('grid-item')) {
+      const titleEl = card.querySelector('h3');
+      const foot = card.querySelector('.grid-item-foot');
+      const materialEl = foot ? foot.querySelector('span') : null;
+      const priceEl = foot ? foot.querySelector('b') : null;
+      const title = titleEl ? titleEl.textContent : '';
+      const material = materialEl ? materialEl.textContent : '';
+      const price = priceEl ? priceEl.textContent : '';
+      return { title, meta: [material, price].filter(Boolean).join(' · ') };
+    }
+
+    if (card.classList.contains('hero-figure')) {
+      const spans = card.querySelectorAll('.cap span');
+      const place = spans[0] ? spans[0].textContent : '';
+      const size = spans[1] ? spans[1].textContent : '';
+      return { title: place, meta: size };
+    }
+
+    if (card.classList.contains('about-diagram')) {
+      return { title: 'About me', meta: '' };
+    }
+
+    return { title: '', meta: '' };
+  }
+
+  function openLightbox(img) {
+    const caption = buildCaption(img);
+    lightboxImg.src = img.src;
+    lightboxImg.alt = img.alt || '';
+    lightboxTitle.textContent = caption.title;
+    lightboxMeta.textContent = caption.meta;
+    lightboxImg.style.setProperty('--zoom-scale', 1);
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden'; // stop the page from scrolling behind the viewer
+  }
+
+  // exposed globally so the carousel's pointer-based tap detection can open
+  // this same lightbox for postcard images — see CAROUSEL SCRIPT
+  window.urbnnOpenLightbox = openLightbox;
+
+  function closeLightbox() {
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+    lightboxImg.style.setProperty('--zoom-scale', 1);
+  }
+
+  clickableImages.forEach((img) => {
+    img.addEventListener('click', () => openLightbox(img));
+  });
+
+  closeBtn.addEventListener('click', closeLightbox);
+
+  // clicking the dark backdrop (anywhere that isn't the photo itself) closes it too
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox || e.target === stage) closeLightbox();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && lightbox.classList.contains('open')) closeLightbox();
+  });
+
+  // hover-zoom: scales the image up and keeps it centered on wherever the cursor is
+  const ZOOM_SCALE = 2.2;
+  lightboxImg.addEventListener('mousemove', (e) => {
+    const rect = lightboxImg.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    lightboxImg.style.setProperty('--zoom-x', x + '%');
+    lightboxImg.style.setProperty('--zoom-y', y + '%');
+    lightboxImg.style.setProperty('--zoom-scale', ZOOM_SCALE);
+  });
+  lightboxImg.addEventListener('mouseleave', () => {
+    lightboxImg.style.setProperty('--zoom-scale', 1);
+  });
+})();
+</script>
 </body>
 </html>
